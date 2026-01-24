@@ -1350,7 +1350,7 @@
         <header>
             <h1 style="margin: 0 0 5px 0; font-size: 1.5em;">Photo Location Mapper</h1>
             <div class="subtitle" style="font-size: 0.85em;">Extract GPS data from photos and visualize on a map</div>
-            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0</div>
+            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0 build 22</div>
         </header>
 
         <div class="upload-section">
@@ -1423,22 +1423,30 @@
                     </div>
                 </div>
                 
-                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);" title="Show photo thumbnails on map. Drag to move marker. Hold Option/Alt + drag to pan image within circle.">📷 Photo Markers</button>
+                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);" title="Show photo thumbnails on map. Drag to pan image within circle. Hold Alt/Option + drag to move marker.">📷 Photo Markers</button>
                 <button class="save-button" id="mapSaveBtn" style="margin-left: 10px;">💾 Save Map as JPEG</button>
-                <div id="markerSizeControl" style="display: none; margin-left: 10px; align-items: center; gap: 8px;">
-                    <label style="font-size: 12px; white-space: nowrap;">Size:</label>
-                    <input type="range" id="markerSizeSlider" min="50" max="400" value="70" style="width: 100px; cursor: pointer;">
-                    <span id="markerSizeValue" style="font-size: 12px; min-width: 40px;">70px</span>
-                </div>
-                <div id="numberMarkerSizeControl" style="display: none; margin-left: 10px; align-items: center; gap: 8px;">
-                    <label style="font-size: 12px; white-space: nowrap;">№ Size:</label>
-                    <input type="range" id="numberMarkerSizeSlider" min="1" max="5" step="0.5" value="1" style="width: 80px; cursor: pointer;">
-                    <span id="numberMarkerSizeValue" style="font-size: 12px; min-width: 30px;">1x</span>
-                </div>
             </div>
             <div id="mapContainer" style="position: relative;">
                 <div id="map"></div>
                 <div id="map3d" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
+                <!-- Slider controls overlay at top-left of map -->
+                <div id="mapSliderOverlay" style="display: none; position: absolute; top: 10px; left: 50px; z-index: 1000; background: rgba(255,255,255,0.95); padding: 8px 12px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-direction: column; gap: 6px;">
+                    <div id="markerSizeControl" style="display: none; align-items: center; gap: 8px;">
+                        <label style="font-size: 12px; white-space: nowrap; min-width: 50px;">Size:</label>
+                        <input type="range" id="markerSizeSlider" min="50" max="400" value="70" style="width: 100px; cursor: pointer;">
+                        <span id="markerSizeValue" style="font-size: 12px; min-width: 40px;">70px</span>
+                    </div>
+                    <div id="numberMarkerSizeControl" style="display: none; align-items: center; gap: 8px;">
+                        <label style="font-size: 12px; white-space: nowrap; min-width: 50px;">№ Size:</label>
+                        <input type="range" id="numberMarkerSizeSlider" min="1" max="5" step="0.5" value="1" style="width: 80px; cursor: pointer;">
+                        <span id="numberMarkerSizeValue" style="font-size: 12px; min-width: 30px;">1x</span>
+                    </div>
+                    <div id="spiderSpreadControl" style="display: none; align-items: center; gap: 8px;">
+                        <label style="font-size: 12px; white-space: nowrap; min-width: 50px;">Spread:</label>
+                        <input type="range" id="spiderSpreadSlider" min="0.5" max="5" step="0.5" value="1.5" style="width: 80px; cursor: pointer;">
+                        <span id="spiderSpreadValue" style="font-size: 12px; min-width: 30px;">1.5x</span>
+                    </div>
+                </div>
             </div>
         </div>
         </div>
@@ -1474,6 +1482,21 @@
         <div class="lightbox-counter" id="lightboxCounter"></div>
     </div>
 
+    <!-- Mapbox API Key Dialog -->
+    <div id="mapboxKeyDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 24px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Mapbox API Key</h3>
+            <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">Enter your Mapbox API key to enable 3D terrain view and additional map styles.</p>
+            <p style="margin: 0 0 16px 0; font-size: 13px;"><a href="https://www.mapbox.com/" target="_blank" style="color: #667eea;">Get a free key at mapbox.com →</a></p>
+            <input type="text" id="mapboxKeyInput" placeholder="pk.eyJ1Ijoi..." style="width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 16px; font-family: monospace;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="mapboxKeyCancelBtn" style="padding: 8px 16px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; background: white; cursor: pointer;">Cancel</button>
+                <button id="mapboxKeyClearBtn" style="padding: 8px 16px; font-size: 14px; border: 1px solid #e74c3c; border-radius: 6px; background: white; color: #e74c3c; cursor: pointer;">Clear Key</button>
+                <button id="mapboxKeySaveBtn" style="padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #667eea; color: white; cursor: pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let photos = [];
         let routes = [];
@@ -1482,13 +1505,14 @@
         let map = null;
         let map3d = null; // Mapbox GL JS 3D map
         let is3DMode = false;
+        let mapboxApiKey = localStorage.getItem('mapboxApiKey') || '';
         let currentTileLayer = null;
         let markers = [];
         let photoMarkersMode = false;
         let photoMarkers = [];
         let numberBadgeMarkers = [];
         let spiderLegs = [];
-        let PHOTO_MARKER_SIZE = 70; // pixels, adjustable via slider
+        let PHOTO_MARKER_SIZE = 70; // pixels, adjustable via slider (2D view)
         let NUMBER_MARKER_SIZE = 32; // pixels for number markers, adjustable via slider
         let photoMarkerTransforms = {}; // Store manual adjustments by photo index
         let badgeOrbitalAngles = {}; // Store badge orbital angle by photo index (radians)
@@ -1498,8 +1522,13 @@
         let highlightedPhotoName = null; // Photo name to highlight after re-sort
         let lightboxIndex = 0; // Current photo index in lightbox
         let photosWithUnsavedEdits = new Set(); // Track photos with unsaved changes
-        let BADGE_SCALE = 1; // Scale factor for orbital number badges (1x to 5x)
+        let BADGE_SCALE = 1; // Scale factor for orbital number badges (1x to 5x) (2D view)
         const BASE_BADGE_SIZE = 28; // Base badge size in pixels
+        let SPIDER_SPREAD = 1.5; // Spread multiplier for spider/rubberband clustering
+
+        // Independent 3D view size settings
+        let PHOTO_MARKER_SIZE_3D = 70; // pixels, adjustable via slider (3D view)
+        let BADGE_SCALE_3D = 1; // Scale factor for number badges (3D view)
 
         // Map state tracking - remembers user's map configuration during session
         let userHasInteractedWithMap = false; // True once user has zoomed/panned/configured map
@@ -1588,13 +1617,25 @@
         displaySavedPaths();
 
         // Button clicks trigger file inputs
-        selectPhotosButton.addEventListener('click', () => fileInput.click());
+        // Use setTimeout to help with macOS focus issues after file dialogs
+        selectPhotosButton.addEventListener('click', () => {
+            fileInput.click();
+        });
 
         // Route button opens file picker directly
-        routeButton.addEventListener('click', () => routeInput.click());
+        routeButton.addEventListener('click', () => {
+            routeInput.click();
+        });
 
-        fileInput.addEventListener('change', handleFileSelect);
-        routeInput.addEventListener('change', handleRouteSelect);
+        // Refocus window after file dialog closes (macOS focus fix)
+        fileInput.addEventListener('change', (e) => {
+            window.focus();
+            handleFileSelect(e);
+        });
+        routeInput.addEventListener('change', (e) => {
+            window.focus();
+            handleRouteSelect(e);
+        });
         showMapButton.addEventListener('click', showMap);
         showGalleryButton.addEventListener('click', showGallery);
         mapSaveBtn.addEventListener('click', saveMapAsImage);
@@ -1604,41 +1645,76 @@
         const markerSizeSlider = document.getElementById('markerSizeSlider');
         const markerSizeValue = document.getElementById('markerSizeValue');
         const markerSizeControl = document.getElementById('markerSizeControl');
-        
+
         markerSizeSlider.addEventListener('input', () => {
-            const oldSize = PHOTO_MARKER_SIZE;
             const newSize = parseInt(markerSizeSlider.value);
-            PHOTO_MARKER_SIZE = newSize;
-            markerSizeValue.textContent = PHOTO_MARKER_SIZE + 'px';
 
-            // Scale the saved transforms proportionally to the new size
-            const sizeRatio = newSize / oldSize;
-            Object.keys(photoMarkerTransforms).forEach(key => {
-                const transform = photoMarkerTransforms[key];
-                if (transform) {
-                    transform.scale *= sizeRatio;
-                    transform.baseScale *= sizeRatio;
-                    transform.posX *= sizeRatio;
-                    transform.posY *= sizeRatio;
+            if (is3DMode) {
+                // 3D mode uses independent size variable
+                PHOTO_MARKER_SIZE_3D = newSize;
+                markerSizeValue.textContent = PHOTO_MARKER_SIZE_3D + 'px';
+                if (photoMarkersMode) {
+                    add3DMarkers(); // Refresh 3D markers with new size
                 }
-            });
+            } else {
+                // 2D mode
+                const oldSize = PHOTO_MARKER_SIZE;
+                PHOTO_MARKER_SIZE = newSize;
+                markerSizeValue.textContent = PHOTO_MARKER_SIZE + 'px';
 
-            if (photoMarkersMode) {
-                showPhotoMarkers(); // Refresh with new size
+                // Scale the saved transforms proportionally to the new size (2D only)
+                const sizeRatio = newSize / oldSize;
+                Object.keys(photoMarkerTransforms).forEach(key => {
+                    const transform = photoMarkerTransforms[key];
+                    if (transform) {
+                        transform.scale *= sizeRatio;
+                        transform.baseScale *= sizeRatio;
+                        transform.posX *= sizeRatio;
+                        transform.posY *= sizeRatio;
+                    }
+                });
+
+                if (photoMarkersMode) {
+                    showPhotoMarkers(); // Refresh with new size
+                }
             }
         });
-        
+
         const numberMarkerSizeSlider = document.getElementById('numberMarkerSizeSlider');
         const numberMarkerSizeValue = document.getElementById('numberMarkerSizeValue');
         const numberMarkerSizeControl = document.getElementById('numberMarkerSizeControl');
-        
+
         numberMarkerSizeSlider.addEventListener('input', () => {
-            BADGE_SCALE = parseFloat(numberMarkerSizeSlider.value);
-            numberMarkerSizeValue.textContent = BADGE_SCALE + 'x';
-            if (photoMarkersMode) {
-                showPhotoMarkers(); // Refresh with new badge size
+            const newScale = parseFloat(numberMarkerSizeSlider.value);
+
+            if (is3DMode) {
+                // 3D mode uses independent badge scale
+                BADGE_SCALE_3D = newScale;
+                numberMarkerSizeValue.textContent = BADGE_SCALE_3D + 'x';
+                if (photoMarkersMode) {
+                    add3DMarkers(); // Refresh 3D markers with new badge size
+                }
+            } else {
+                // 2D mode
+                BADGE_SCALE = newScale;
+                numberMarkerSizeValue.textContent = BADGE_SCALE + 'x';
+                if (photoMarkersMode) {
+                    showPhotoMarkers(); // Refresh with new badge size
+                }
             }
         });
+
+        const spiderSpreadSlider = document.getElementById('spiderSpreadSlider');
+        const spiderSpreadValue = document.getElementById('spiderSpreadValue');
+
+        spiderSpreadSlider.addEventListener('input', () => {
+            SPIDER_SPREAD = parseFloat(spiderSpreadSlider.value);
+            spiderSpreadValue.textContent = SPIDER_SPREAD + 'x';
+            if (photoMarkersMode && is3DMode) {
+                add3DMarkers(); // Refresh 3D markers with new spread
+            }
+        });
+
         clearButton.addEventListener('click', clearAll);
         closeMapButton.addEventListener('click', () => {
             closeAllPhotoPopups();
@@ -1708,6 +1784,18 @@
         mapStyleSelect.addEventListener('change', changeMapStyle);
         document.getElementById('mapboxKeyBtn').addEventListener('click', showMapboxKeyDialog);
         document.getElementById('toggle3DBtn').addEventListener('click', toggle3DView);
+
+        // Mapbox API key dialog buttons
+        document.getElementById('mapboxKeySaveBtn').addEventListener('click', saveMapboxKey);
+        document.getElementById('mapboxKeyCancelBtn').addEventListener('click', hideMapboxKeyDialog);
+        document.getElementById('mapboxKeyClearBtn').addEventListener('click', clearMapboxKey);
+        document.getElementById('mapboxKeyDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'mapboxKeyDialog') hideMapboxKeyDialog();
+        });
+        document.getElementById('mapboxKeyInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') saveMapboxKey();
+            if (e.key === 'Escape') hideMapboxKeyDialog();
+        });
 
         // Drag and drop support
         container.addEventListener('dragover', handleDragOver);
@@ -3345,9 +3433,6 @@
             });
         }
 
-        // Mapbox API key (stored in localStorage)
-        let mapboxApiKey = localStorage.getItem('mapboxApiKey') || '';
-
         const mapStyles = {
             osm: {
                 name: 'Street Map',
@@ -3494,9 +3579,16 @@
         }
 
         function changeMapStyle() {
+            // Handle 3D mode separately
+            if (is3DMode) {
+                change3DStyle();
+                return;
+            }
+
             if (!map || !currentTileLayer) return;
 
             const style = mapStyleSelect.value;
+            current2DStyle = style;
             const styleConfig = mapStyles[style];
 
             // Check if Mapbox style requires API key
@@ -3533,22 +3625,68 @@
         }
 
         function showMapboxKeyDialog() {
-            const currentKey = mapboxApiKey ? mapboxApiKey.substring(0, 10) + '...' : '(not set)';
-            const newKey = prompt(`Enter your Mapbox API key:\n\nCurrent: ${currentKey}\n\nGet a free key at mapbox.com`, mapboxApiKey || '');
+            const dialog = document.getElementById('mapboxKeyDialog');
+            const input = document.getElementById('mapboxKeyInput');
 
-            if (newKey !== null) {
-                mapboxApiKey = newKey.trim();
-                if (mapboxApiKey) {
-                    localStorage.setItem('mapboxApiKey', mapboxApiKey);
-                    alert('Mapbox API key saved. You can now use Mapbox map styles and 3D view.');
-                    // Show 3D button when API key is set
-                    document.getElementById('toggle3DBtn').style.display = '';
-                } else {
-                    localStorage.removeItem('mapboxApiKey');
-                    document.getElementById('toggle3DBtn').style.display = 'none';
-                }
-            }
+            // Pre-fill with current key
+            input.value = mapboxApiKey || '';
+
+            // Show dialog
+            dialog.style.display = 'flex';
+            input.focus();
         }
+
+        function hideMapboxKeyDialog() {
+            document.getElementById('mapboxKeyDialog').style.display = 'none';
+        }
+
+        function saveMapboxKey() {
+            const input = document.getElementById('mapboxKeyInput');
+            mapboxApiKey = input.value.trim();
+
+            if (mapboxApiKey) {
+                localStorage.setItem('mapboxApiKey', mapboxApiKey);
+                document.getElementById('toggle3DBtn').style.display = '';
+            } else {
+                localStorage.removeItem('mapboxApiKey');
+                document.getElementById('toggle3DBtn').style.display = 'none';
+            }
+
+            hideMapboxKeyDialog();
+        }
+
+        function clearMapboxKey() {
+            document.getElementById('mapboxKeyInput').value = '';
+            mapboxApiKey = '';
+            localStorage.removeItem('mapboxApiKey');
+            document.getElementById('toggle3DBtn').style.display = 'none';
+            hideMapboxKeyDialog();
+        }
+
+        // Store 2D map style options HTML for restoring
+        const map2DStyleOptions = `
+            <option value="osm">Street Map (Standard navigation)</option>
+            <option value="satellite">Satellite (Aerial imagery)</option>
+            <option value="cycle">Cycle Map (Bike routes with contours)</option>
+            <option value="humanitarian" selected>Humanitarian (Clear, simple)</option>
+            <optgroup label="Mapbox (API key required)">
+                <option value="mapbox-streets">Mapbox Streets</option>
+                <option value="mapbox-outdoors">Mapbox Outdoors</option>
+                <option value="mapbox-satellite">Mapbox Satellite</option>
+                <option value="mapbox-satellite-streets">Mapbox Satellite Streets</option>
+            </optgroup>
+        `;
+
+        // 3D map style options
+        const map3DStyleOptions = `
+            <option value="satellite-streets-v12">Satellite Streets</option>
+            <option value="satellite-v9">Satellite</option>
+            <option value="outdoors-v12">Outdoors (with contours)</option>
+            <option value="streets-v12">Streets</option>
+        `;
+
+        let current2DStyle = 'humanitarian'; // Track current 2D style
+        let current3DStyle = 'satellite-streets-v12'; // Track current 3D style
 
         function toggle3DView() {
             if (!mapboxApiKey) {
@@ -3560,6 +3698,14 @@
             const btn = document.getElementById('toggle3DBtn');
             const map2dContainer = document.getElementById('map');
             const map3dContainer = document.getElementById('map3d');
+            const mapStyleSelect = document.getElementById('mapStyleSelect');
+
+            const sliderOverlay = document.getElementById('mapSliderOverlay');
+
+            const markerSizeSlider = document.getElementById('markerSizeSlider');
+            const markerSizeValue = document.getElementById('markerSizeValue');
+            const numberMarkerSizeSlider = document.getElementById('numberMarkerSizeSlider');
+            const numberMarkerSizeValue = document.getElementById('numberMarkerSizeValue');
 
             if (is3DMode) {
                 btn.textContent = '🗺️ 2D View';
@@ -3567,11 +3713,27 @@
                 map2dContainer.style.display = 'none';
                 map3dContainer.style.display = 'block';
 
-                // Hide photo markers controls in 3D mode
+                // Save current 2D style and switch to 3D styles
+                current2DStyle = mapStyleSelect.value;
+                mapStyleSelect.innerHTML = map3DStyleOptions;
+                mapStyleSelect.value = current3DStyle;
+
+                // Update sliders to show 3D values
+                markerSizeSlider.value = PHOTO_MARKER_SIZE_3D;
+                markerSizeValue.textContent = PHOTO_MARKER_SIZE_3D + 'px';
+                numberMarkerSizeSlider.value = BADGE_SCALE_3D;
+                numberMarkerSizeValue.textContent = BADGE_SCALE_3D + 'x';
+
+                // Show photo markers controls in 3D mode if in photo markers mode
+                // Hide spread control in 3D (not needed with balloon display)
+                // Move slider overlay to left edge (3D zoom controls are on right)
                 if (photoMarkersMode) {
-                    document.getElementById('markerSizeControl').style.display = 'none';
-                    document.getElementById('numberMarkerSizeControl').style.display = 'none';
+                    sliderOverlay.style.display = 'flex';
+                    sliderOverlay.style.left = '10px';
+                    document.getElementById('markerSizeControl').style.display = 'flex';
+                    document.getElementById('numberMarkerSizeControl').style.display = 'flex';
                 }
+                document.getElementById('spiderSpreadControl').style.display = 'none';
 
                 init3DMap();
             } else {
@@ -3580,10 +3742,28 @@
                 map2dContainer.style.display = 'block';
                 map3dContainer.style.display = 'none';
 
+                // Save current 3D style and restore 2D styles
+                current3DStyle = mapStyleSelect.value;
+                mapStyleSelect.innerHTML = map2DStyleOptions;
+                mapStyleSelect.value = current2DStyle;
+
+                // Update sliders to show 2D values
+                markerSizeSlider.value = PHOTO_MARKER_SIZE;
+                markerSizeValue.textContent = PHOTO_MARKER_SIZE + 'px';
+                numberMarkerSizeSlider.value = BADGE_SCALE;
+                numberMarkerSizeValue.textContent = BADGE_SCALE + 'x';
+
                 // Restore photo markers controls if in photo markers mode
+                // Show spread control in 2D (needed for clustering)
+                // Move slider overlay back to clear Leaflet zoom controls (on left)
                 if (photoMarkersMode) {
+                    sliderOverlay.style.display = 'flex';
+                    sliderOverlay.style.left = '50px';
                     document.getElementById('markerSizeControl').style.display = 'flex';
                     document.getElementById('numberMarkerSizeControl').style.display = 'flex';
+                    document.getElementById('spiderSpreadControl').style.display = 'flex';
+                } else {
+                    document.getElementById('spiderSpreadControl').style.display = 'none';
                 }
 
                 // Sync view from 3D to 2D
@@ -3595,6 +3775,18 @@
 
                 map.invalidateSize();
             }
+        }
+
+        function change3DStyle() {
+            if (!map3d) return;
+
+            const styleId = document.getElementById('mapStyleSelect').value;
+            current3DStyle = styleId;
+            const styleUrl = `mapbox://styles/mapbox/${styleId}`;
+
+            map3d.setStyle(styleUrl);
+
+            // The 'style.load' event will handle re-adding terrain, sky, routes and markers
         }
 
         function init3DMap() {
@@ -3616,9 +3808,10 @@
 
             // If 3D map doesn't exist, create it
             if (!map3d) {
+                const styleId = current3DStyle;
                 map3d = new mapboxgl.Map({
                     container: 'map3d',
-                    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+                    style: `mapbox://styles/mapbox/${styleId}`,
                     center: center,
                     zoom: zoom,
                     pitch: pitch,
@@ -3626,31 +3819,39 @@
                     antialias: true
                 });
 
-                map3d.on('load', () => {
+                map3d.on('style.load', () => {
                     // Add terrain
-                    map3d.addSource('mapbox-dem', {
-                        type: 'raster-dem',
-                        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
-                        tileSize: 512,
-                        maxzoom: 14
-                    });
+                    if (!map3d.getSource('mapbox-dem')) {
+                        map3d.addSource('mapbox-dem', {
+                            type: 'raster-dem',
+                            url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                            tileSize: 512,
+                            maxzoom: 14
+                        });
+                    }
 
                     map3d.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
                     // Add sky
-                    map3d.addLayer({
-                        id: 'sky',
-                        type: 'sky',
-                        paint: {
-                            'sky-type': 'atmosphere',
-                            'sky-atmosphere-sun': [0.0, 90.0],
-                            'sky-atmosphere-sun-intensity': 15
-                        }
-                    });
+                    if (!map3d.getLayer('sky')) {
+                        map3d.addLayer({
+                            id: 'sky',
+                            type: 'sky',
+                            paint: {
+                                'sky-type': 'atmosphere',
+                                'sky-atmosphere-sun': [0.0, 90.0],
+                                'sky-atmosphere-sun-intensity': 15
+                            }
+                        });
+                    }
 
-                    // Add routes and markers
-                    add3DRoutes();
-                    add3DMarkers();
+                    // Add routes and markers after a short delay to ensure style is fully ready
+                    setTimeout(() => {
+                        console.log('3D style loaded, adding routes and markers');
+                        add3DRoutes();
+                        add3DMarkers();
+                        setup3DDepthSorting();
+                    }, 200);
                 });
 
                 // Add navigation controls
@@ -3661,22 +3862,31 @@
                 map3d.setZoom(zoom);
                 map3d.resize();
 
-                // Update routes and markers
-                if (map3d.isStyleLoaded()) {
+                // Update routes and markers with a delay to ensure map is ready
+                setTimeout(() => {
                     add3DRoutes();
                     add3DMarkers();
-                }
+                    update3DMarkerDepths();
+                }, 100);
             }
         }
 
         function add3DRoutes() {
-            if (!map3d || !map3d.isStyleLoaded()) return;
+            if (!map3d) {
+                console.log('add3DRoutes: map3d not initialized');
+                return;
+            }
 
             // Remove existing route layers
-            if (map3d.getLayer('routes-line')) map3d.removeLayer('routes-line');
-            if (map3d.getLayer('routes-border')) map3d.removeLayer('routes-border');
-            if (map3d.getSource('routes')) map3d.removeSource('routes');
+            try {
+                if (map3d.getLayer('routes-line')) map3d.removeLayer('routes-line');
+                if (map3d.getLayer('routes-border')) map3d.removeLayer('routes-border');
+                if (map3d.getSource('routes')) map3d.removeSource('routes');
+            } catch (e) {
+                console.log('add3DRoutes: error removing layers:', e);
+            }
 
+            console.log('add3DRoutes: routes array length =', routes.length);
             if (routes.length === 0) return;
 
             // Build GeoJSON from routes
@@ -3685,10 +3895,17 @@
                 if (selectedActivities.size > 0 && !selectedActivities.has(route.activityType)) {
                     return null;
                 }
+
+                // Validate route path
+                if (!route.path || route.path.length === 0) {
+                    console.log('add3DRoutes: route', index, 'has no path');
+                    return null;
+                }
+
                 return {
                     type: 'Feature',
                     properties: {
-                        color: getActivityColor(route.activityType),
+                        color: getActivityColor(route.activityType) || '#3388ff',
                         activityType: route.activityType
                     },
                     geometry: {
@@ -3698,51 +3915,65 @@
                 };
             }).filter(f => f !== null);
 
+            console.log('add3DRoutes: features count =', features.length);
             if (features.length === 0) return;
 
-            map3d.addSource('routes', {
-                type: 'geojson',
-                data: {
-                    type: 'FeatureCollection',
-                    features: features
-                }
-            });
+            try {
+                map3d.addSource('routes', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: features
+                    },
+                    lineMetrics: true
+                });
 
-            // White border
-            map3d.addLayer({
-                id: 'routes-border',
-                type: 'line',
-                source: 'routes',
-                layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                paint: {
-                    'line-color': '#ffffff',
-                    'line-width': 8,
-                    'line-opacity': 0.9
-                }
-            });
+                // White border - rendered on ground with terrain draping
+                map3d.addLayer({
+                    id: 'routes-border',
+                    type: 'line',
+                    source: 'routes',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': '#ffffff',
+                        'line-width': 8,
+                        'line-opacity': 0.9,
+                        'line-emissive-strength': 1
+                    }
+                });
 
-            // Colored line
-            map3d.addLayer({
-                id: 'routes-line',
-                type: 'line',
-                source: 'routes',
-                layout: {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                paint: {
-                    'line-color': ['get', 'color'],
-                    'line-width': 5,
-                    'line-opacity': 0.9
-                }
-            });
+                // Colored line - rendered on ground with terrain draping
+                map3d.addLayer({
+                    id: 'routes-line',
+                    type: 'line',
+                    source: 'routes',
+                    layout: {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    paint: {
+                        'line-color': ['get', 'color'],
+                        'line-width': 5,
+                        'line-opacity': 0.9,
+                        'line-emissive-strength': 1
+                    }
+                });
+
+                console.log('add3DRoutes: layers added successfully');
+            } catch (e) {
+                console.error('add3DRoutes: error adding layers:', e);
+            }
         }
 
         // Store 3D markers for cleanup
         let markers3d = [];
+        let activePhotoMarker3d = null; // Currently displayed photo marker
+
+        // Track currently shown photo for re-showing after marker refresh
+        let activePhotoMarker3dData = null;
 
         function add3DMarkers() {
             if (!map3d) return;
@@ -3751,16 +3982,29 @@
             markers3d.forEach(m => m.remove());
             markers3d = [];
 
+            // Store active photo data before removing (to restore after refresh)
+            const savedActivePhoto = activePhotoMarker3dData;
+
+            // Remove active photo marker if any
+            if (activePhotoMarker3d) {
+                activePhotoMarker3d.remove();
+                activePhotoMarker3d = null;
+            }
+
             const photosWithGPS = photos.filter(p => p.gps && p.gps.hasGPS);
+            const badgeSize = BASE_BADGE_SIZE * BADGE_SCALE_3D;
 
             photosWithGPS.forEach((photo, index) => {
-                // Create marker element
+                // Find the original index in the full photos array for transform lookup
+                const originalIndex = photos.indexOf(photo);
+
+                // Create numbered marker
                 const el = document.createElement('div');
                 el.className = 'marker-3d';
                 el.style.cssText = `
-                    width: 40px;
-                    height: 40px;
-                    background: #667eea;
+                    width: ${badgeSize}px;
+                    height: ${badgeSize}px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     border: 3px solid white;
                     border-radius: 50%;
                     display: flex;
@@ -3768,38 +4012,254 @@
                     justify-content: center;
                     color: white;
                     font-weight: bold;
-                    font-size: 14px;
+                    font-size: ${badgeSize * 0.5}px;
                     box-shadow: 0 4px 8px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.4);
                     cursor: pointer;
                 `;
                 el.textContent = index + 1;
 
-                // Add click handler
-                el.addEventListener('click', () => {
-                    // Show popup with photo info
-                    const popup = new mapboxgl.Popup({ offset: 25 })
-                        .setHTML(`
-                            <div style="text-align: center; max-width: 200px;">
-                                <img src="${photo.src}" style="width: 100%; border-radius: 4px; margin-bottom: 8px;">
-                                <div style="font-weight: bold;">${photo.name}</div>
-                                <div style="font-size: 0.9em; color: #666;">
-                                    ${photo.gps.latitude.toFixed(6)}, ${photo.gps.longitude.toFixed(6)}
-                                </div>
-                            </div>
-                        `);
-
-                    new mapboxgl.Marker(el)
-                        .setLngLat([photo.gps.longitude, photo.gps.latitude])
-                        .setPopup(popup)
-                        .addTo(map3d);
+                // Click handler to show photo marker
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    show3DPhotoMarker(photo, index, originalIndex);
                 });
 
-                const marker = new mapboxgl.Marker(el)
+                // Create marker
+                const marker = new mapboxgl.Marker({
+                    element: el,
+                    anchor: 'center',
+                    rotationAlignment: 'viewport',
+                    pitchAlignment: 'viewport'
+                })
                     .setLngLat([photo.gps.longitude, photo.gps.latitude])
                     .addTo(map3d);
 
+                // Store position for depth sorting
+                marker._lngLat3d = [photo.gps.longitude, photo.gps.latitude];
                 markers3d.push(marker);
             });
+
+            // Restore active photo marker if there was one
+            if (savedActivePhoto) {
+                const { photo, displayIndex, originalIndex } = savedActivePhoto;
+                show3DPhotoMarker(photo, displayIndex, originalIndex);
+            }
+        }
+
+        let activeRubberband3d = null; // Line connecting number marker to photo balloon
+        let hiddenNumberMarker3d = null; // The number marker hidden when photo balloon is shown
+
+        function show3DPhotoMarker(photo, displayIndex, originalIndex) {
+            // Remove previous photo marker and rubberband if any
+            if (activePhotoMarker3d) {
+                activePhotoMarker3d.remove();
+                activePhotoMarker3d = null;
+            }
+            if (activeRubberband3d) {
+                try {
+                    if (map3d.getLayer('rubberband-3d')) map3d.removeLayer('rubberband-3d');
+                    if (map3d.getSource('rubberband-3d')) map3d.removeSource('rubberband-3d');
+                } catch (e) {}
+                activeRubberband3d = null;
+            }
+
+            // Restore previously hidden number marker
+            if (hiddenNumberMarker3d) {
+                hiddenNumberMarker3d.getElement().style.display = '';
+                hiddenNumberMarker3d = null;
+            }
+
+            // Hide the number marker at this location
+            if (markers3d[displayIndex]) {
+                markers3d[displayIndex].getElement().style.display = 'none';
+                hiddenNumberMarker3d = markers3d[displayIndex];
+            }
+
+            // Store active photo data for restoration after slider changes
+            activePhotoMarker3dData = { photo, displayIndex, originalIndex };
+
+            const size = PHOTO_MARKER_SIZE_3D;
+            const badgeSize = BASE_BADGE_SIZE * BADGE_SCALE_3D;
+
+            // Calculate balloon offset - shorter string that just clears the number marker
+            const stringLength = badgeSize + 10; // Just enough to clear the number badge
+
+            const el = document.createElement('div');
+            el.className = 'marker-3d-photo-popup';
+            el.style.cssText = `
+                width: ${size}px;
+                height: ${size + stringLength}px;
+                cursor: pointer;
+                position: relative;
+            `;
+
+            // String/rubberband (vertical line from photo to anchor point)
+            const stringEl = document.createElement('div');
+            stringEl.style.cssText = `
+                position: absolute;
+                left: 50%;
+                bottom: 0;
+                width: 3px;
+                height: ${stringLength}px;
+                background: linear-gradient(to bottom, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+                transform: translateX(-50%);
+                border-radius: 2px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            `;
+            el.appendChild(stringEl);
+
+            // Photo circle (balloon) - positioned at top
+            const photoCircle = document.createElement('div');
+            photoCircle.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: ${size}px;
+                height: ${size}px;
+                border-radius: 50%;
+                overflow: hidden;
+                border: 3px solid white;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.4);
+                background: #333;
+            `;
+
+            const img = document.createElement('img');
+            img.src = photo.src;
+
+            // Check for saved image transform from 2D editing using original photo index
+            const savedTransform = photoMarkerTransforms[originalIndex];
+            if (savedTransform) {
+                img.style.cssText = `
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    transform-origin: 0 0;
+                    transform: translate(${savedTransform.posX}px, ${savedTransform.posY}px) scale(${savedTransform.scale});
+                `;
+            } else {
+                img.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                `;
+            }
+            photoCircle.appendChild(img);
+            el.appendChild(photoCircle);
+
+            // Number badge on photo circle
+            const badge = document.createElement('div');
+            badge.style.cssText = `
+                position: absolute;
+                top: -${badgeSize * 0.3}px;
+                right: -${badgeSize * 0.3}px;
+                width: ${badgeSize}px;
+                height: ${badgeSize}px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border: 2px solid white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: ${badgeSize * 0.5}px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.4), 0 12px 30px rgba(0,0,0,0.25);
+            `;
+            badge.textContent = displayIndex + 1;
+            photoCircle.appendChild(badge);
+
+            // Click handler to dismiss
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (activePhotoMarker3d) {
+                    activePhotoMarker3d.remove();
+                    activePhotoMarker3d = null;
+                }
+                activePhotoMarker3dData = null; // Clear stored data
+                // Restore hidden number marker
+                if (hiddenNumberMarker3d) {
+                    hiddenNumberMarker3d.getElement().style.display = '';
+                    hiddenNumberMarker3d = null;
+                }
+                if (activeRubberband3d) {
+                    try {
+                        if (map3d.getLayer('rubberband-3d')) map3d.removeLayer('rubberband-3d');
+                        if (map3d.getSource('rubberband-3d')) map3d.removeSource('rubberband-3d');
+                    } catch (e) {}
+                    activeRubberband3d = null;
+                }
+            });
+
+            // Create marker anchored at bottom (the string attaches to the GPS point)
+            activePhotoMarker3d = new mapboxgl.Marker({
+                element: el,
+                anchor: 'bottom',
+                rotationAlignment: 'viewport',
+                pitchAlignment: 'viewport'
+            })
+                .setLngLat([photo.gps.longitude, photo.gps.latitude])
+                .addTo(map3d);
+
+            // Ensure photo marker is on top
+            el.style.zIndex = '1000';
+            activeRubberband3d = true;
+        }
+
+        // Update marker z-indices based on distance from camera
+        function update3DMarkerDepths() {
+            if (!map3d || markers3d.length === 0) return;
+
+            const camera = map3d.getFreeCameraOptions();
+            const cameraPos = camera.position;
+
+            // Calculate distance from camera to each marker
+            const markerDistances = markers3d.map((marker, index) => {
+                const lngLat = marker._lngLat3d || marker.getLngLat();
+                const lng = Array.isArray(lngLat) ? lngLat[0] : lngLat.lng;
+                const lat = Array.isArray(lngLat) ? lngLat[1] : lngLat.lat;
+
+                // Convert to approximate 3D position
+                // Use mercator projection approximation
+                const mercX = (lng + 180) / 360;
+                const mercY = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2;
+
+                // Get camera position in same coordinate space
+                const camX = cameraPos ? cameraPos.x : 0.5;
+                const camY = cameraPos ? cameraPos.y : 0.5;
+                const camZ = cameraPos ? cameraPos.z : 1;
+
+                // Calculate distance (simplified)
+                const dx = mercX - camX;
+                const dy = mercY - camY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                return { marker, index, distance };
+            });
+
+            // Sort by distance (farthest first = lowest z-index)
+            markerDistances.sort((a, b) => b.distance - a.distance);
+
+            // Apply z-indices
+            markerDistances.forEach((item, zOrder) => {
+                const el = item.marker.getElement();
+                if (el) {
+                    el.style.zIndex = zOrder + 1;
+                }
+            });
+        }
+
+        // Set up depth sorting when 3D map is initialized
+        function setup3DDepthSorting() {
+            if (!map3d) return;
+
+            // Update on camera movement
+            map3d.on('move', update3DMarkerDepths);
+            map3d.on('zoom', update3DMarkerDepths);
+            map3d.on('pitch', update3DMarkerDepths);
+            map3d.on('rotate', update3DMarkerDepths);
+
+            // Initial update
+            update3DMarkerDepths();
         }
 
         function showMap() {
@@ -4313,19 +4773,34 @@
             const btn = document.getElementById('photoMarkersBtn');
             const photoSizeControl = document.getElementById('markerSizeControl');
             const numberSizeControl = document.getElementById('numberMarkerSizeControl');
-            
+            const spiderSpreadControl = document.getElementById('spiderSpreadControl');
+            const sliderOverlay = document.getElementById('mapSliderOverlay');
+
             if (photoMarkersMode) {
                 btn.textContent = '🔢 Number Markers';
+                sliderOverlay.style.display = 'flex';
                 photoSizeControl.style.display = 'flex';
                 numberSizeControl.style.display = 'flex';
+                // Show spread control only in 2D mode (not needed in 3D with balloon display)
+                spiderSpreadControl.style.display = is3DMode ? 'none' : 'flex';
                 closeAllPhotoPopups(); // Close popups in photo marker mode
-                showPhotoMarkers();
+                if (is3DMode) {
+                    add3DMarkers(); // Refresh 3D markers with photo mode
+                } else {
+                    showPhotoMarkers();
+                }
             } else {
                 btn.textContent = '📷 Photo Markers';
+                sliderOverlay.style.display = 'none';
                 photoSizeControl.style.display = 'none';
                 numberSizeControl.style.display = 'none';
-                hidePhotoMarkers();
-                showNumberMarkers();
+                spiderSpreadControl.style.display = 'none';
+                if (is3DMode) {
+                    add3DMarkers(); // Refresh 3D markers with number mode
+                } else {
+                    hidePhotoMarkers();
+                    showNumberMarkers();
+                }
             }
         }
 
@@ -4889,14 +5364,16 @@
             };
 
             // Update cursor based on Option key state
+            // Default: grab (pan image), Alt held: move (drag marker)
             function updateCursor(altKey) {
                 if (altKey) {
-                    // Alt held: pan image within circle (hand cursor)
-                    element.style.cursor = 'grab';
-                    img.style.cursor = 'grab';
-                } else {
+                    // Alt held: move the marker
                     element.style.cursor = 'move';
                     img.style.cursor = 'move';
+                } else {
+                    // Default: pan image within circle (hand cursor)
+                    element.style.cursor = 'grab';
+                    img.style.cursor = 'grab';
                 }
             }
 
@@ -4914,24 +5391,10 @@
             });
 
             // Mousedown handler - Option/Alt key determines behavior
+            // Default: pan image, Alt held: drag marker
             element.addEventListener('mousedown', (e) => {
                 if (e.altKey) {
-                    // Option key held: pan image within the circle
-                    startX = e.clientX;
-                    startY = e.clientY;
-                    initialX = posX;
-                    initialY = posY;
-                    photoMarkerDragState = {
-                        isMarkerDrag: false,
-                        img,
-                        startX, startY,
-                        initialX, initialY,
-                        data: img._photoMarkerData
-                    };
-                    e.preventDefault();
-                    e.stopPropagation();
-                } else {
-                    // No Option key: drag the entire marker
+                    // Option key held: drag the entire marker
                     isMarkerDragging = true;
                     markerDragStartLatLng = leafletMarker.getLatLng();
                     startX = e.clientX;
@@ -4953,6 +5416,21 @@
                     map.dragging.disable();
                     e.preventDefault();
                     e.stopPropagation();
+                } else {
+                    // No Option key: pan image within the circle
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = posX;
+                    initialY = posY;
+                    photoMarkerDragState = {
+                        isMarkerDrag: false,
+                        img,
+                        startX, startY,
+                        initialX, initialY,
+                        data: img._photoMarkerData
+                    };
+                    e.preventDefault();
+                    e.stopPropagation();
                 }
             });
 
@@ -4971,7 +5449,7 @@
             if (!photoMarkerDragState) return;
 
             if (photoMarkerDragState.isMarkerDrag) {
-                // Dragging the entire marker (Option key was held)
+                // Dragging the entire marker (Alt/Option key held)
                 const { leafletMarker, badgeMarker, updateRubberband, startX, startY, startLatLng } = photoMarkerDragState;
 
                 // Convert pixel movement to lat/lng offset
@@ -5510,46 +5988,50 @@
 
             const mapContainer = document.getElementById('mapContainer');
             const restore = {};
+            const baseName = safeFilename(mapPanelTitle);
 
             let restorePhotoMarkers = null;
 
             try {
-                // Use dom-to-image-more (actively maintained fork of dom-to-image)
-                await ensureScript(
-                    'https://cdn.jsdelivr.net/npm/dom-to-image-more@3.4.5/dist/dom-to-image-more.min.js',
-                    () => typeof window.domtoimage !== 'undefined'
-                );
+                // Handle 3D view differently - use Mapbox's canvas export
+                if (is3DMode && map3d) {
+                    await save3DMapAsImage(baseName);
+                } else {
+                    // 2D view - use dom-to-image-more
+                    await ensureScript(
+                        'https://cdn.jsdelivr.net/npm/dom-to-image-more@3.4.5/dist/dom-to-image-more.min.js',
+                        () => typeof window.domtoimage !== 'undefined'
+                    );
 
-                await waitForTileLayerLoad();
+                    await waitForTileLayerLoad();
 
-                const zoomControls = mapContainer.querySelector('.leaflet-control-zoom');
-                const attribControls = mapContainer.querySelector('.leaflet-control-attribution');
-                if (zoomControls) { restore.zoomDisplay = zoomControls.style.display; zoomControls.style.display = 'none'; }
-                if (attribControls) { restore.attribDisplay = attribControls.style.display; attribControls.style.display = 'none'; }
+                    const zoomControls = mapContainer.querySelector('.leaflet-control-zoom');
+                    const attribControls = mapContainer.querySelector('.leaflet-control-attribution');
+                    if (zoomControls) { restore.zoomDisplay = zoomControls.style.display; zoomControls.style.display = 'none'; }
+                    if (attribControls) { restore.attribDisplay = attribControls.style.display; attribControls.style.display = 'none'; }
 
-                // Convert blob URLs to data URLs for photo markers (fixes CORS/tainted canvas issues)
-                restorePhotoMarkers = await convertPhotoMarkersToDataUrls(mapContainer);
-                await sleep(200);
+                    // Convert blob URLs to data URLs for photo markers (fixes CORS/tainted canvas issues)
+                    restorePhotoMarkers = await convertPhotoMarkersToDataUrls(mapContainer);
+                    await sleep(200);
 
-                const baseName = safeFilename(mapPanelTitle);
+                    // Force Leaflet to redraw canvas layers at current view
+                    map.invalidateSize({ animate: false });
+                    await sleep(100);
 
-                // Force Leaflet to redraw canvas layers at current view
-                map.invalidateSize({ animate: false });
-                await sleep(100);
-
-                const dataUrl = await window.domtoimage.toJpeg(mapContainer, {
-                    quality: 0.92,
-                    filter: (node) => {
-                        if (node.classList && (
-                            node.classList.contains('leaflet-control-zoom') ||
-                            node.classList.contains('leaflet-control-attribution'))) {
-                            return false;
+                    const dataUrl = await window.domtoimage.toJpeg(mapContainer, {
+                        quality: 0.92,
+                        filter: (node) => {
+                            if (node.classList && (
+                                node.classList.contains('leaflet-control-zoom') ||
+                                node.classList.contains('leaflet-control-attribution'))) {
+                                return false;
+                            }
+                            return true;
                         }
-                        return true;
-                    }
-                });
+                    });
 
-                downloadDataUrl(dataUrl, baseName);
+                    downloadDataUrl(dataUrl, baseName);
+                }
 
             } catch (err) {
                 console.error('saveMapAsImage failed:', err);
@@ -5564,11 +6046,200 @@
                 if (attribControls) attribControls.style.display = restore.attribDisplay ?? '';
 
                 if (typeof monitorMapResize === 'function') monitorMapResize();
-                try { map.invalidateSize({ animate: false }); } catch { map.invalidateSize(); }
+                if (map) {
+                    try { map.invalidateSize({ animate: false }); } catch { map.invalidateSize(); }
+                }
 
                 if (mapSaveBtn) {
                     mapSaveBtn.disabled = false;
                     mapSaveBtn.textContent = prevBtnText || 'Save';
+                }
+            }
+        }
+
+        // Save 3D map using Mapbox's canvas export with markers overlay
+        async function save3DMapAsImage(baseName) {
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+            // Wait for map to be fully rendered
+            await new Promise(resolve => {
+                if (map3d.loaded()) {
+                    resolve();
+                } else {
+                    map3d.once('idle', resolve);
+                }
+            });
+            await sleep(200);
+
+            // Get the Mapbox canvas
+            const mapCanvas = map3d.getCanvas();
+
+            // Create a new canvas to composite map + markers
+            const canvas = document.createElement('canvas');
+            canvas.width = mapCanvas.width;
+            canvas.height = mapCanvas.height;
+            const ctx = canvas.getContext('2d');
+
+            // Draw the map canvas
+            ctx.drawImage(mapCanvas, 0, 0);
+
+            // Get all marker elements and draw them onto the canvas
+            const map3dContainer = document.getElementById('map3d');
+            const markerElements = map3dContainer.querySelectorAll('.mapboxgl-marker');
+
+            for (const markerEl of markerElements) {
+                try {
+                    // Get marker position on screen
+                    const rect = markerEl.getBoundingClientRect();
+                    const containerRect = map3dContainer.getBoundingClientRect();
+
+                    // Calculate position relative to map container, accounting for canvas pixel ratio
+                    const pixelRatio = window.devicePixelRatio || 1;
+                    const x = (rect.left - containerRect.left) * pixelRatio;
+                    const y = (rect.top - containerRect.top) * pixelRatio;
+                    const width = rect.width * pixelRatio;
+                    const height = rect.height * pixelRatio;
+
+                    // Use html2canvas-style rendering for the marker
+                    await drawMarkerToCanvas(ctx, markerEl, x, y, width, height, pixelRatio);
+                } catch (err) {
+                    console.warn('Failed to draw marker:', err);
+                }
+            }
+
+            // Convert canvas to JPEG data URL
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+            // Download
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `${baseName}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Draw a marker element to canvas (simplified rendering)
+        async function drawMarkerToCanvas(ctx, markerEl, x, y, width, height, pixelRatio) {
+            // For numbered markers (circles with numbers)
+            const innerDiv = markerEl.querySelector('.marker-3d');
+            if (innerDiv) {
+                const style = window.getComputedStyle(innerDiv);
+                const size = parseFloat(style.width) * pixelRatio;
+
+                // Draw circle background
+                ctx.save();
+                const centerX = x + width / 2;
+                const centerY = y + height / 2;
+                const radius = size / 2;
+
+                // Gradient background
+                const gradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // White border
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3 * pixelRatio;
+                ctx.stroke();
+
+                // Number text
+                const number = innerDiv.textContent;
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${size * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(number, centerX, centerY);
+
+                ctx.restore();
+                return;
+            }
+
+            // For photo balloon markers - draw simplified version
+            const photoPopup = markerEl.querySelector('.marker-3d-photo-popup');
+            if (photoPopup) {
+                const img = photoPopup.querySelector('img');
+                if (img && img.complete) {
+                    ctx.save();
+
+                    // Get photo circle dimensions
+                    const photoCircle = photoPopup.querySelector('div[style*="border-radius: 50%"]');
+                    if (photoCircle) {
+                        const circleStyle = window.getComputedStyle(photoCircle);
+                        const circleSize = parseFloat(circleStyle.width) * pixelRatio;
+                        const circleX = x;
+                        const circleY = y;
+
+                        // Draw the string first
+                        const stringEl = photoPopup.querySelector('div[style*="width: 3px"]');
+                        if (stringEl) {
+                            const stringStyle = window.getComputedStyle(stringEl);
+                            const stringHeight = parseFloat(stringStyle.height) * pixelRatio;
+                            const stringX = x + width / 2;
+                            const stringY = y + circleSize;
+
+                            const stringGradient = ctx.createLinearGradient(stringX, stringY, stringX, stringY + stringHeight);
+                            stringGradient.addColorStop(0, 'rgba(102, 126, 234, 0.9)');
+                            stringGradient.addColorStop(1, 'rgba(118, 75, 162, 0.9)');
+
+                            ctx.fillStyle = stringGradient;
+                            ctx.fillRect(stringX - 1.5 * pixelRatio, stringY, 3 * pixelRatio, stringHeight);
+                        }
+
+                        // Clip to circle for the photo
+                        ctx.beginPath();
+                        ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2 - 3 * pixelRatio, 0, Math.PI * 2);
+                        ctx.clip();
+
+                        // Draw the image
+                        ctx.drawImage(img, circleX, circleY, circleSize, circleSize);
+
+                        ctx.restore();
+                        ctx.save();
+
+                        // Draw circle border
+                        ctx.beginPath();
+                        ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 3 * pixelRatio;
+                        ctx.stroke();
+
+                        // Draw badge
+                        const badge = photoPopup.querySelector('div[style*="border-radius: 50%"][style*="gradient"]');
+                        if (badge) {
+                            const badgeStyle = window.getComputedStyle(badge);
+                            const badgeSize = parseFloat(badgeStyle.width) * pixelRatio;
+                            const badgeX = circleX + circleSize - badgeSize * 0.7;
+                            const badgeY = circleY - badgeSize * 0.3;
+
+                            const badgeGradient = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
+                            badgeGradient.addColorStop(0, '#667eea');
+                            badgeGradient.addColorStop(1, '#764ba2');
+
+                            ctx.beginPath();
+                            ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2);
+                            ctx.fillStyle = badgeGradient;
+                            ctx.fill();
+                            ctx.strokeStyle = 'white';
+                            ctx.lineWidth = 2 * pixelRatio;
+                            ctx.stroke();
+
+                            // Badge number
+                            const badgeNum = badge.textContent;
+                            ctx.fillStyle = 'white';
+                            ctx.font = `bold ${badgeSize * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(badgeNum, badgeX + badgeSize / 2, badgeY + badgeSize / 2);
+                        }
+                    }
+
+                    ctx.restore();
                 }
             }
         }
