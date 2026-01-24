@@ -11,13 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 3D terrain view with Mapbox GL JS
 - Toggle between 2D and 3D map views
 - 3D terrain exaggeration for enhanced visualization
-- Photo markers displayed in 3D view
-- Route polylines displayed in 3D view
+- Balloon-style photo markers in 3D view (click number marker to reveal photo on string)
+- Route polylines displayed in 3D view with terrain draping
 - Atmospheric sky rendering in 3D view
 - View synchronization between 2D and 3D modes
+- Independent size controls for 2D and 3D views
+- 3D map style selector (Satellite Streets, Satellite, Outdoors with contours, Streets)
+- Slider controls overlay on map for better UI layout
+- BUILD file for tracking development builds
+
+### Changed
+- Swapped Alt/Option key behavior: default drag now pans image within marker, Alt+drag moves the marker
+- Map Style dropdown dynamically shows 2D or 3D styles based on current view mode
+- Photo Markers button tooltip updated to reflect new controls
 
 ### Fixed
 - Gallery JPEG export now properly handles object-fit (images no longer stretched)
+- 3D view Save as JPEG now works using Mapbox canvas export (fixes CORS/WebGL issues)
+- Photos in 3D view now correctly use transform settings from 2D editing
+- Number marker hidden when photo balloon is displayed in 3D view
 
 ---
 

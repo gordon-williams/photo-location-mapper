@@ -29,11 +29,12 @@ When Photo Markers mode is enabled, your photos appear as circular thumbnails on
 
 | Action | How |
 |--------|-----|
-| **Move photo marker** | Drag the circular photo marker to reposition it |
-| **Pan image within marker** | Hold **Alt/Option** + drag inside the photo circle |
+| **Pan image within marker** | Drag inside the photo circle |
+| **Move photo marker** | Hold **Alt/Option** + drag the circular photo marker |
 | **Move number badge** | Drag the numbered badge to orbit around the photo |
 | **Resize markers** | Use the **Size** slider |
 | **Resize number badges** | Use the **№ Size** slider |
+| **Adjust cluster spread** | Use the **Spread** slider (2D view only) |
 
 ### Rubberband Line
 
@@ -117,19 +118,30 @@ With a Mapbox API key configured, you can view your photos and routes in 3D terr
 
 ### 3D View Features
 - Realistic terrain elevation with 1.5x exaggeration
-- Satellite imagery with street labels
+- Multiple map styles: Satellite Streets, Satellite, Outdoors (with contour lines), Streets
 - Atmospheric sky rendering
-- Photo location markers
+- Numbered photo location markers
+- Balloon-style photo display (click a number marker to reveal the photo)
 - Route polylines following terrain
+- Independent size controls (separate from 2D settings)
+- Save as JPEG export
 - View position syncs when switching between 2D and 3D
 
-*Note: Photo Markers mode (circular photo thumbnails) is only available in 2D view.*
+### 3D Photo Markers
+
+In 3D view, photos are displayed differently than in 2D:
+- Photo locations show as numbered markers
+- Click a number marker to reveal the photo in a balloon above it
+- Click the photo balloon to dismiss it
+- Photo positioning from 2D editing is preserved
+- Size sliders control 3D markers independently from 2D
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| **Alt/Option + Drag** | Pan image within photo marker circle |
+| **Drag** | Pan image within photo marker circle |
+| **Alt/Option + Drag** | Move photo marker to new position |
 
 ## Tips
 
