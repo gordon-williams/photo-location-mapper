@@ -134,6 +134,10 @@ Works in modern browsers with JavaScript enabled:
 - Safari
 - Edge
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
