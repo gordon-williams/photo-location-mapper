@@ -5082,24 +5082,19 @@
                 if (closeBtn) closeBtn.style.display = 'none';
                 if (galleryContainer) galleryContainer.style.overflowY = 'hidden';
                 
-                // Use html2canvas instead - much better with images
+                // Use dom-to-image-more which properly handles object-fit
                 await ensureScript(
-                    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
-                    () => typeof window.html2canvas !== 'undefined'
+                    'https://cdn.jsdelivr.net/npm/dom-to-image-more@3.4.5/dist/dom-to-image-more.min.js',
+                    () => typeof window.domtoimage !== 'undefined'
                 );
-                
+
                 // Wait for all images to be visible and loaded
                 await sleep(500);
-                
-                const canvas = await window.html2canvas(galleryWrapper, {
-                    backgroundColor: '#3c3c3c',
-                    scale: 2, // Higher quality
-                    logging: false,
-                    useCORS: true,
-                    allowTaint: true
+
+                const dataUrl = await window.domtoimage.toJpeg(galleryWrapper, {
+                    quality: 0.92,
+                    bgcolor: '#3c3c3c'
                 });
-                
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
                 downloadDataUrl(dataUrl, safeFilename(galleryTitle));
                 
             } catch (err) {
