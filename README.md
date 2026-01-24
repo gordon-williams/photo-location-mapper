@@ -95,15 +95,35 @@ Click **Save Map as JPEG** to export the current map view as an image. The expor
 
 ## Mapbox Setup
 
-Mapbox provides high-quality map tiles with a generous free tier (50,000 map loads/month).
+Mapbox provides high-quality map tiles and 3D terrain with a generous free tier (50,000 map loads/month).
 
 1. Sign up at [mapbox.com](https://www.mapbox.com/)
 2. Copy your API key from the account dashboard
 3. In Photo Location Mapper, click the 🔑 button next to the map style dropdown
 4. Paste your API key
-5. Select a Mapbox style from the dropdown
+5. Select a Mapbox style from the dropdown, or use the 3D View
 
 Your API key is stored locally in your browser and persists across sessions.
+
+## 3D Terrain View
+
+With a Mapbox API key configured, you can view your photos and routes in 3D terrain:
+
+1. Configure your Mapbox API key (see above)
+2. Click the **🏔️ 3D View** button
+3. The map switches to 3D with terrain elevation
+4. Navigate using mouse drag to pan, scroll to zoom, right-drag to rotate/tilt
+5. Click **🗺️ 2D View** to return to the standard view
+
+### 3D View Features
+- Realistic terrain elevation with 1.5x exaggeration
+- Satellite imagery with street labels
+- Atmospheric sky rendering
+- Photo location markers
+- Route polylines following terrain
+- View position syncs when switching between 2D and 3D
+
+*Note: Photo Markers mode (circular photo thumbnails) is only available in 2D view.*
 
 ## Keyboard Shortcuts
 

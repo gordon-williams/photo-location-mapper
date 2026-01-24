@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-01-24
+
+### Added
+- 3D terrain view with Mapbox GL JS
+- Toggle between 2D and 3D map views
+- 3D terrain exaggeration for enhanced visualization
+- Photo markers displayed in 3D view
+- Route polylines displayed in 3D view
+- Atmospheric sky rendering in 3D view
+- View synchronization between 2D and 3D modes
+
+### Fixed
+- Gallery JPEG export now properly handles object-fit (images no longer stretched)
+
+---
+
 ## [1.0.0] - 2026-01-24
 
 ### Added

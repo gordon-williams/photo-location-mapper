@@ -14,7 +14,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Photo Location Mapper</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/piexifjs@1.0.6/piexif.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/exifreader@4.21.1/dist/exif-reader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
@@ -1348,7 +1350,7 @@
         <header>
             <h1 style="margin: 0 0 5px 0; font-size: 1.5em;">Photo Location Mapper</h1>
             <div class="subtitle" style="font-size: 0.85em;">Extract GPS data from photos and visualize on a map</div>
-            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.0.0</div>
+            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0</div>
         </header>
 
         <div class="upload-section">
@@ -1413,7 +1415,8 @@
                     </optgroup>
                 </select>
                 <button id="mapboxKeyBtn" style="margin-left: 5px; padding: 2px 8px; font-size: 11px; cursor: pointer;" title="Configure Mapbox API key">🔑</button>
-                
+                <button id="toggle3DBtn" class="save-button" style="margin-left: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: none;" title="Toggle 3D terrain view (requires Mapbox API key)">🏔️ 3D View</button>
+
                 <div id="routeFilterContainer" style="display: none; margin-left: 30px; flex: 1; align-items: center;">
                     <label>📍 Show Activities:</label>
                     <div id="activityCheckboxes" style="display: inline-flex; flex-wrap: wrap; gap: 10px; margin-left: 10px;">
@@ -1435,6 +1438,7 @@
             </div>
             <div id="mapContainer" style="position: relative;">
                 <div id="map"></div>
+                <div id="map3d" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></div>
             </div>
         </div>
         </div>
@@ -1476,6 +1480,8 @@
         let routePolylines = [];
         let selectedActivities = new Set();
         let map = null;
+        let map3d = null; // Mapbox GL JS 3D map
+        let is3DMode = false;
         let currentTileLayer = null;
         let markers = [];
         let photoMarkersMode = false;
@@ -1701,6 +1707,7 @@
 
         mapStyleSelect.addEventListener('change', changeMapStyle);
         document.getElementById('mapboxKeyBtn').addEventListener('click', showMapboxKeyDialog);
+        document.getElementById('toggle3DBtn').addEventListener('click', toggle3DView);
 
         // Drag and drop support
         container.addEventListener('dragover', handleDragOver);
@@ -3533,15 +3540,273 @@
                 mapboxApiKey = newKey.trim();
                 if (mapboxApiKey) {
                     localStorage.setItem('mapboxApiKey', mapboxApiKey);
-                    alert('Mapbox API key saved. You can now use Mapbox map styles.');
+                    alert('Mapbox API key saved. You can now use Mapbox map styles and 3D view.');
+                    // Show 3D button when API key is set
+                    document.getElementById('toggle3DBtn').style.display = '';
                 } else {
                     localStorage.removeItem('mapboxApiKey');
+                    document.getElementById('toggle3DBtn').style.display = 'none';
                 }
             }
         }
 
+        function toggle3DView() {
+            if (!mapboxApiKey) {
+                alert('Please configure your Mapbox API key first by clicking the 🔑 button.');
+                return;
+            }
+
+            is3DMode = !is3DMode;
+            const btn = document.getElementById('toggle3DBtn');
+            const map2dContainer = document.getElementById('map');
+            const map3dContainer = document.getElementById('map3d');
+
+            if (is3DMode) {
+                btn.textContent = '🗺️ 2D View';
+                btn.title = 'Switch back to 2D map view';
+                map2dContainer.style.display = 'none';
+                map3dContainer.style.display = 'block';
+
+                // Hide photo markers controls in 3D mode
+                if (photoMarkersMode) {
+                    document.getElementById('markerSizeControl').style.display = 'none';
+                    document.getElementById('numberMarkerSizeControl').style.display = 'none';
+                }
+
+                init3DMap();
+            } else {
+                btn.textContent = '🏔️ 3D View';
+                btn.title = 'Toggle 3D terrain view (requires Mapbox API key)';
+                map2dContainer.style.display = 'block';
+                map3dContainer.style.display = 'none';
+
+                // Restore photo markers controls if in photo markers mode
+                if (photoMarkersMode) {
+                    document.getElementById('markerSizeControl').style.display = 'flex';
+                    document.getElementById('numberMarkerSizeControl').style.display = 'flex';
+                }
+
+                // Sync view from 3D to 2D
+                if (map3d && map) {
+                    const center = map3d.getCenter();
+                    const zoom = map3d.getZoom();
+                    map.setView([center.lat, center.lng], zoom, { animate: false });
+                }
+
+                map.invalidateSize();
+            }
+        }
+
+        function init3DMap() {
+            if (!mapboxApiKey) return;
+
+            mapboxgl.accessToken = mapboxApiKey;
+
+            // Get current view from 2D map
+            let center = [-122.4, 37.8]; // Default
+            let zoom = 10;
+            let pitch = 60;
+            let bearing = 0;
+
+            if (map) {
+                const mapCenter = map.getCenter();
+                center = [mapCenter.lng, mapCenter.lat];
+                zoom = map.getZoom();
+            }
+
+            // If 3D map doesn't exist, create it
+            if (!map3d) {
+                map3d = new mapboxgl.Map({
+                    container: 'map3d',
+                    style: 'mapbox://styles/mapbox/satellite-streets-v12',
+                    center: center,
+                    zoom: zoom,
+                    pitch: pitch,
+                    bearing: bearing,
+                    antialias: true
+                });
+
+                map3d.on('load', () => {
+                    // Add terrain
+                    map3d.addSource('mapbox-dem', {
+                        type: 'raster-dem',
+                        url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                        tileSize: 512,
+                        maxzoom: 14
+                    });
+
+                    map3d.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+                    // Add sky
+                    map3d.addLayer({
+                        id: 'sky',
+                        type: 'sky',
+                        paint: {
+                            'sky-type': 'atmosphere',
+                            'sky-atmosphere-sun': [0.0, 90.0],
+                            'sky-atmosphere-sun-intensity': 15
+                        }
+                    });
+
+                    // Add routes and markers
+                    add3DRoutes();
+                    add3DMarkers();
+                });
+
+                // Add navigation controls
+                map3d.addControl(new mapboxgl.NavigationControl());
+            } else {
+                // Update existing map view
+                map3d.setCenter(center);
+                map3d.setZoom(zoom);
+                map3d.resize();
+
+                // Update routes and markers
+                if (map3d.isStyleLoaded()) {
+                    add3DRoutes();
+                    add3DMarkers();
+                }
+            }
+        }
+
+        function add3DRoutes() {
+            if (!map3d || !map3d.isStyleLoaded()) return;
+
+            // Remove existing route layers
+            if (map3d.getLayer('routes-line')) map3d.removeLayer('routes-line');
+            if (map3d.getLayer('routes-border')) map3d.removeLayer('routes-border');
+            if (map3d.getSource('routes')) map3d.removeSource('routes');
+
+            if (routes.length === 0) return;
+
+            // Build GeoJSON from routes
+            const features = routes.map((route, index) => {
+                // Check if this activity type is selected
+                if (selectedActivities.size > 0 && !selectedActivities.has(route.activityType)) {
+                    return null;
+                }
+                return {
+                    type: 'Feature',
+                    properties: {
+                        color: getActivityColor(route.activityType),
+                        activityType: route.activityType
+                    },
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: route.path.map(p => [p.lng, p.lat])
+                    }
+                };
+            }).filter(f => f !== null);
+
+            if (features.length === 0) return;
+
+            map3d.addSource('routes', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: features
+                }
+            });
+
+            // White border
+            map3d.addLayer({
+                id: 'routes-border',
+                type: 'line',
+                source: 'routes',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': '#ffffff',
+                    'line-width': 8,
+                    'line-opacity': 0.9
+                }
+            });
+
+            // Colored line
+            map3d.addLayer({
+                id: 'routes-line',
+                type: 'line',
+                source: 'routes',
+                layout: {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                paint: {
+                    'line-color': ['get', 'color'],
+                    'line-width': 5,
+                    'line-opacity': 0.9
+                }
+            });
+        }
+
+        // Store 3D markers for cleanup
+        let markers3d = [];
+
+        function add3DMarkers() {
+            if (!map3d) return;
+
+            // Remove existing markers
+            markers3d.forEach(m => m.remove());
+            markers3d = [];
+
+            const photosWithGPS = photos.filter(p => p.gps && p.gps.hasGPS);
+
+            photosWithGPS.forEach((photo, index) => {
+                // Create marker element
+                const el = document.createElement('div');
+                el.className = 'marker-3d';
+                el.style.cssText = `
+                    width: 40px;
+                    height: 40px;
+                    background: #667eea;
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 14px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.4);
+                    cursor: pointer;
+                `;
+                el.textContent = index + 1;
+
+                // Add click handler
+                el.addEventListener('click', () => {
+                    // Show popup with photo info
+                    const popup = new mapboxgl.Popup({ offset: 25 })
+                        .setHTML(`
+                            <div style="text-align: center; max-width: 200px;">
+                                <img src="${photo.src}" style="width: 100%; border-radius: 4px; margin-bottom: 8px;">
+                                <div style="font-weight: bold;">${photo.name}</div>
+                                <div style="font-size: 0.9em; color: #666;">
+                                    ${photo.gps.latitude.toFixed(6)}, ${photo.gps.longitude.toFixed(6)}
+                                </div>
+                            </div>
+                        `);
+
+                    new mapboxgl.Marker(el)
+                        .setLngLat([photo.gps.longitude, photo.gps.latitude])
+                        .setPopup(popup)
+                        .addTo(map3d);
+                });
+
+                const marker = new mapboxgl.Marker(el)
+                    .setLngLat([photo.gps.longitude, photo.gps.latitude])
+                    .addTo(map3d);
+
+                markers3d.push(marker);
+            });
+        }
+
         function showMap() {
             mapModal.classList.add('active');
+
+            // Show/hide 3D button based on API key availability
+            document.getElementById('toggle3DBtn').style.display = mapboxApiKey ? '' : 'none';
 
             // Close any existing popups
             closeAllPhotoPopups();
