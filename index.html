@@ -1350,7 +1350,7 @@
         <header>
             <h1 style="margin: 0 0 5px 0; font-size: 1.5em;">Photo Location Mapper</h1>
             <div class="subtitle" style="font-size: 0.85em;">Extract GPS data from photos and visualize on a map</div>
-            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0 build 22</div>
+            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0 build 44</div>
         </header>
 
         <div class="upload-section">
@@ -2014,7 +2014,15 @@
                             if (path.length > 1) {
                                 const startTime = new Date(item.startDate);
                                 const endTime = new Date(item.endDate);
-                                const activityType = (item.activityType || item.samples?.[0]?.classifiedType || 'unknown').toLowerCase();
+
+                                // Get activity type from various possible fields
+                                let rawActivityType = item.activityType ||
+                                                      item.activity?.topActivity?.type ||
+                                                      item.samples?.[0]?.classifiedType ||
+                                                      'unknown';
+
+                                // Normalize activity type names
+                                const activityType = normalizeActivityType(rawActivityType);
 
                                 // Skip stationary data
                                 if (activityType === 'stationary') return;
@@ -2035,6 +2043,75 @@
                 console.error('Error parsing route file:', error);
                 throw error;
             }
+        }
+
+        // Normalize activity type names from various formats (Google Takeout, Arc, etc.)
+        function normalizeActivityType(rawType) {
+            if (!rawType) return 'unknown';
+
+            const type = rawType.toLowerCase().trim();
+
+            // Map various activity type names to consistent values
+            const activityMap = {
+                // Walking variants
+                'walking': 'walking',
+                'walk': 'walking',
+                'on_foot': 'walking',
+                'onfoot': 'walking',
+                'foot': 'walking',
+
+                // Running variants
+                'running': 'running',
+                'run': 'running',
+
+                // Cycling variants
+                'cycling': 'cycling',
+                'cycle': 'cycling',
+                'biking': 'cycling',
+                'bike': 'cycling',
+                'bicycle': 'cycling',
+                'on_bicycle': 'cycling',
+
+                // Driving/Car variants
+                'driving': 'driving',
+                'drive': 'driving',
+                'car': 'driving',
+                'in_vehicle': 'driving',
+                'invehicle': 'driving',
+                'automotive': 'driving',
+                'automobile': 'driving',
+                'motor_vehicle': 'driving',
+
+                // Public transport variants
+                'bus': 'bus',
+                'in_bus': 'bus',
+                'train': 'train',
+                'in_train': 'train',
+                'subway': 'subway',
+                'in_subway': 'subway',
+                'tram': 'tram',
+                'in_tram': 'tram',
+                'ferry': 'ferry',
+                'in_ferry': 'ferry',
+
+                // Air travel
+                'flying': 'flying',
+                'flight': 'flying',
+                'airplane': 'flying',
+                'in_airplane': 'flying',
+                'plane': 'flying',
+
+                // Stationary
+                'stationary': 'stationary',
+                'still': 'stationary',
+                'not_moving': 'stationary',
+
+                // Other
+                'unknown': 'unknown',
+                'unknown_activity_type': 'unknown'
+            };
+
+            return activityMap[type] || type;
         }
 
         function calculateDistance(path) {
@@ -4034,6 +4111,9 @@
                     .setLngLat([photo.gps.longitude, photo.gps.latitude])
                     .addTo(map3d);
 
+                // Set z-index for number markers (between string z:1 and photo z:1000)
+                el.style.zIndex = '500';
+
                 // Store position for depth sorting
                 marker._lngLat3d = [photo.gps.longitude, photo.gps.latitude];
                 markers3d.push(marker);
@@ -4046,33 +4126,11 @@
             }
         }
 
-        let activeRubberband3d = null; // Line connecting number marker to photo balloon
-        let hiddenNumberMarker3d = null; // The number marker hidden when photo balloon is shown
-
         function show3DPhotoMarker(photo, displayIndex, originalIndex) {
-            // Remove previous photo marker and rubberband if any
+            // Remove previous photo marker if any
             if (activePhotoMarker3d) {
                 activePhotoMarker3d.remove();
                 activePhotoMarker3d = null;
-            }
-            if (activeRubberband3d) {
-                try {
-                    if (map3d.getLayer('rubberband-3d')) map3d.removeLayer('rubberband-3d');
-                    if (map3d.getSource('rubberband-3d')) map3d.removeSource('rubberband-3d');
-                } catch (e) {}
-                activeRubberband3d = null;
-            }
-
-            // Restore previously hidden number marker
-            if (hiddenNumberMarker3d) {
-                hiddenNumberMarker3d.getElement().style.display = '';
-                hiddenNumberMarker3d = null;
-            }
-
-            // Hide the number marker at this location
-            if (markers3d[displayIndex]) {
-                markers3d[displayIndex].getElement().style.display = 'none';
-                hiddenNumberMarker3d = markers3d[displayIndex];
             }
 
             // Store active photo data for restoration after slider changes
@@ -4081,34 +4139,23 @@
             const size = PHOTO_MARKER_SIZE_3D;
             const badgeSize = BASE_BADGE_SIZE * BADGE_SCALE_3D;
 
-            // Calculate balloon offset - shorter string that just clears the number marker
-            const stringLength = badgeSize + 10; // Just enough to clear the number badge
+            // Calculate string length to float balloon above number marker
+            const stringLength = badgeSize * 2 + 20;
 
+            // Total height = photo + string
+            const totalHeight = size + stringLength;
+
+            // Single container for photo + string, anchored at bottom (GPS point)
             const el = document.createElement('div');
             el.className = 'marker-3d-photo-popup';
             el.style.cssText = `
                 width: ${size}px;
-                height: ${size + stringLength}px;
+                height: ${totalHeight}px;
                 cursor: pointer;
                 position: relative;
             `;
 
-            // String/rubberband (vertical line from photo to anchor point)
-            const stringEl = document.createElement('div');
-            stringEl.style.cssText = `
-                position: absolute;
-                left: 50%;
-                bottom: 0;
-                width: 3px;
-                height: ${stringLength}px;
-                background: linear-gradient(to bottom, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
-                transform: translateX(-50%);
-                border-radius: 2px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            `;
-            el.appendChild(stringEl);
-
-            // Photo circle (balloon) - positioned at top
+            // Photo circle at TOP of container
             const photoCircle = document.createElement('div');
             photoCircle.style.cssText = `
                 position: absolute;
@@ -4146,27 +4193,20 @@
             photoCircle.appendChild(img);
             el.appendChild(photoCircle);
 
-            // Number badge on photo circle
-            const badge = document.createElement('div');
-            badge.style.cssText = `
+            // String from bottom of photo to bottom of container (GPS point)
+            const stringEl = document.createElement('div');
+            stringEl.style.cssText = `
                 position: absolute;
-                top: -${badgeSize * 0.3}px;
-                right: -${badgeSize * 0.3}px;
-                width: ${badgeSize}px;
-                height: ${badgeSize}px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                border: 2px solid white;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-                font-size: ${badgeSize * 0.5}px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.4), 0 12px 30px rgba(0,0,0,0.25);
+                left: 50%;
+                top: ${size}px;
+                transform: translateX(-50%);
+                width: 3px;
+                height: ${stringLength}px;
+                background: linear-gradient(to bottom, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+                border-radius: 2px;
+                box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.3);
             `;
-            badge.textContent = displayIndex + 1;
-            photoCircle.appendChild(badge);
+            el.appendChild(stringEl);
 
             // Click handler to dismiss
             el.addEventListener('click', (e) => {
@@ -4175,22 +4215,10 @@
                     activePhotoMarker3d.remove();
                     activePhotoMarker3d = null;
                 }
-                activePhotoMarker3dData = null; // Clear stored data
-                // Restore hidden number marker
-                if (hiddenNumberMarker3d) {
-                    hiddenNumberMarker3d.getElement().style.display = '';
-                    hiddenNumberMarker3d = null;
-                }
-                if (activeRubberband3d) {
-                    try {
-                        if (map3d.getLayer('rubberband-3d')) map3d.removeLayer('rubberband-3d');
-                        if (map3d.getSource('rubberband-3d')) map3d.removeSource('rubberband-3d');
-                    } catch (e) {}
-                    activeRubberband3d = null;
-                }
+                activePhotoMarker3dData = null;
             });
 
-            // Create marker anchored at bottom (the string attaches to the GPS point)
+            // Create marker with anchor at bottom (GPS point)
             activePhotoMarker3d = new mapboxgl.Marker({
                 element: el,
                 anchor: 'bottom',
@@ -4200,9 +4228,9 @@
                 .setLngLat([photo.gps.longitude, photo.gps.latitude])
                 .addTo(map3d);
 
-            // Ensure photo marker is on top
-            el.style.zIndex = '1000';
-            activeRubberband3d = true;
+            // Balloon z-index: 100 (BELOW number markers at 500)
+            // Number markers will appear in front of the string
+            el.style.zIndex = '100';
         }
 
         // Update marker z-indices based on distance from camera
@@ -4239,11 +4267,11 @@
             // Sort by distance (farthest first = lowest z-index)
             markerDistances.sort((a, b) => b.distance - a.distance);
 
-            // Apply z-indices
+            // Apply z-indices (base of 500 to stay above balloon at z-index 100)
             markerDistances.forEach((item, zOrder) => {
                 const el = item.marker.getElement();
                 if (el) {
-                    el.style.zIndex = zOrder + 1;
+                    el.style.zIndex = 500 + zOrder;
                 }
             });
         }
@@ -4277,7 +4305,10 @@
             // Temporarily reset photo markers mode while rebuilding
             photoMarkersMode = false;
             document.getElementById('photoMarkersBtn').textContent = '📷 Photo Markers';
+            document.getElementById('mapSliderOverlay').style.display = 'none';
             document.getElementById('markerSizeControl').style.display = 'none';
+            document.getElementById('numberMarkerSizeControl').style.display = 'none';
+            document.getElementById('spiderSpreadControl').style.display = 'none';
 
             if (!map) {
                 map = L.map('map', {
@@ -4779,6 +4810,8 @@
             if (photoMarkersMode) {
                 btn.textContent = '🔢 Number Markers';
                 sliderOverlay.style.display = 'flex';
+                // Position slider overlay based on view mode (3D controls on right, 2D on left)
+                sliderOverlay.style.left = is3DMode ? '10px' : '50px';
                 photoSizeControl.style.display = 'flex';
                 numberSizeControl.style.display = 'flex';
                 // Show spread control only in 2D mode (not needed in 3D with balloon display)
