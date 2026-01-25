@@ -30,7 +30,7 @@ When Photo Markers mode is enabled, your photos appear as circular thumbnails on
 | Action | How |
 |--------|-----|
 | **Pan image within marker** | Drag inside the photo circle |
-| **Move photo marker** | Hold **Alt/Option** + drag the circular photo marker |
+| **Move photo marker** | Hold **Alt/Option** + drag, or **right-click drag** the circular photo marker |
 | **Move number badge** | Drag the numbered badge to orbit around the photo |
 | **Resize markers** | Use the **Size** slider |
 | **Resize number badges** | Use the **№ Size** slider |
@@ -85,7 +85,7 @@ When route data includes activity types (walking, cycling, driving, etc.), check
 
 ## Saving Maps
 
-Click **Save Map as JPEG** to export the current map view as an image. The export includes:
+Click **Save Map Image** to export the current map view as an image. The export includes:
 - Map tiles
 - Route lines
 - Photo markers (if enabled)
@@ -111,19 +111,20 @@ Your API key is stored locally in your browser and persists across sessions.
 With a Mapbox API key configured, you can view your photos and routes in 3D terrain:
 
 1. Configure your Mapbox API key (see above)
-2. Click the **🏔️ 3D View** button
+2. Click the **3D** button
 3. The map switches to 3D with terrain elevation
 4. Navigate using mouse drag to pan, scroll to zoom, right-drag to rotate/tilt
-5. Click **🗺️ 2D View** to return to the standard view
+5. Click **2D** to return to the standard view
 
 ### 3D View Features
 - Realistic terrain elevation with 1.5x exaggeration
 - Multiple map styles: Satellite Streets, Satellite, Outdoors (with contour lines), Streets
 - Atmospheric sky rendering
 - Numbered photo location markers
-- Balloon-style photo display (click a number marker to reveal the photo)
-- Route polylines following terrain
+- Balloon-style photo display with bouncy animation (click a number marker to reveal the photo)
+- Route polylines following terrain with activity type filtering
 - Independent size controls (separate from 2D settings)
+- Reset button to re-center on all markers when lost
 - Save as JPEG export
 - View position syncs when switching between 2D and 3D
 
@@ -142,6 +143,8 @@ In 3D view, photos are displayed differently than in 2D:
 |-----|--------|
 | **Drag** | Pan image within photo marker circle |
 | **Alt/Option + Drag** | Move photo marker to new position |
+| **Right-click + Drag** | Move photo marker to new position (alternative) |
+| **Scroll wheel** | Zoom image within photo marker (zooms from center) |
 
 ## Tips
 
@@ -165,6 +168,10 @@ Works in modern browsers with JavaScript enabled:
 - Firefox
 - Safari
 - Edge
+
+### Known Issue: macOS File Dialog Focus
+
+On macOS, when the file picker opens, you may need to click once inside the dialog before you can select files. Similarly, after closing the file picker, you may need to click once on the browser window to restore focus before interacting with other elements. This is a quirk of how browsers interact with native macOS file dialogs, not a bug in the application.
 
 ## Changelog
 
