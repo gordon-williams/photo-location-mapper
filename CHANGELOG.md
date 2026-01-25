@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-01-25 (Build 92)
+## [1.1.0] - 2026-01-25 (Build 108)
 
 ### Added
 - 3D terrain view with Mapbox GL JS
@@ -27,8 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BUILD file for tracking development builds
 - GPX activity type inference from speed when no activity data present
 - Activity type confirmation dialog for GPX files without activity data
+- Elevation profile chart with interactive tooltip and map marker
+- Elevation button on control bar to toggle elevation panel
 
 ### Changed
+- Map resizes when elevation panel is toggled (fills available space)
 - Swapped Alt/Option key behavior: default drag now pans image within marker, Alt+drag moves the marker
 - Map Style dropdown dynamically shows 2D or 3D styles based on current view mode
 - Photo Markers button tooltip updated to reflect new controls
@@ -61,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Photo marker dynamic sizing now updates all nested DOM elements correctly
 - Slider controls hidden when saving 2D map as JPEG
 - Removed undefined `displaySavedPaths()` function call
+- Google Takeout JSON parser now extracts altitude data for elevation chart
+- GPX parser validates elevation values (rejects NaN)
 
 ### Performance
 - Dynamic slider updates for photo marker circles (resize live during drag)

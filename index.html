@@ -848,7 +848,7 @@
 
 
         .map-container-wrapper {
-            background: white;
+            background: #333;
             border-radius: 0;
             width: 100%;
             max-width: 100%;
@@ -930,6 +930,52 @@
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
+        }
+
+        /* Elevation Profile Panel */
+        #elevationPanel {
+            display: none;
+            background: #222;
+            border-top: 1px solid #444;
+            padding: 10px 20px 15px 20px;
+            position: relative;
+        }
+
+        #elevationPanel.visible {
+            display: block;
+        }
+
+        #elevationCanvas {
+            width: 100%;
+            height: 120px;
+            cursor: crosshair;
+        }
+
+        #elevationTooltip {
+            position: absolute;
+            background: rgba(40, 40, 40, 0.95);
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 12px;
+            color: #ddd;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        #elevationTooltip.visible {
+            display: block;
+        }
+
+        #elevationNoData {
+            color: #888;
+            font-size: 13px;
+            text-align: center;
+            padding: 40px 0;
         }
 
         @media (max-width: 768px) {
@@ -1576,13 +1622,13 @@
                 <button id="toggle3DBtn" class="save-button" style="margin-left: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: none;" title="Toggle 3D terrain view (requires Mapbox API key)">3D</button>
                 <button id="resetViewBtn" class="save-button" style="margin-left: 5px;" title="Reset view to show all markers">Reset</button>
 
-                <div id="routeFilterContainer" style="display: none; margin-left: 30px; flex: 1; align-items: center;">
-                    <label>Show Activities:</label>
-                    <div id="activityCheckboxes" style="display: inline-flex; flex-wrap: wrap; gap: 10px; margin-left: 10px;">
+                <div id="routeFilterContainer" style="display: none; margin-left: 20px; flex: 1; align-items: center;">
+                    <div id="activityCheckboxes" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
                     </div>
                 </div>
                 
-                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);" title="Show photo thumbnails on map. Drag to pan image within circle. Hold Alt/Option + drag to move marker.">Photo Markers</button>
+                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: #4CAF50;" title="Show photo thumbnails on map. Drag to pan image within circle. Hold Alt/Option + drag to move marker.">Photo Markers</button>
+                <button class="save-button" id="elevationBtn" style="margin-left: 10px; background: #2196F3;" title="Show elevation profile for visible routes">Elevation</button>
                 <button class="save-button" id="mapSaveBtn" style="margin-left: 10px;">Save Map Image</button>
             </div>
             <div id="mapContainer" style="position: relative;">
@@ -1606,6 +1652,12 @@
                         <span id="spiderSpreadValue" style="font-size: 12px; min-width: 30px;">1.5x</span>
                     </div>
                 </div>
+            </div>
+            <!-- Elevation Profile Panel -->
+            <div id="elevationPanel">
+                <canvas id="elevationCanvas"></canvas>
+                <div id="elevationTooltip"></div>
+                <div id="elevationNoData">No elevation data available for visible routes</div>
             </div>
         </div>
         </div>
@@ -1803,6 +1855,8 @@
         mapSaveBtn.addEventListener('click', saveMapAsImage);
         const photoMarkersBtn = document.getElementById('photoMarkersBtn');
         photoMarkersBtn.addEventListener('click', togglePhotoMarkers);
+        const elevationBtn = document.getElementById('elevationBtn');
+        elevationBtn.addEventListener('click', toggleElevationPanel);
         
         const markerSizeSlider = document.getElementById('markerSizeSlider');
         const markerSizeValue = document.getElementById('markerSizeValue');
@@ -2275,11 +2329,18 @@
                             // Extract route path from samples
                             const path = item.samples
                                 .filter(s => s.location && s.location.latitude && s.location.longitude)
-                                .map(s => ({
-                                    lat: s.location.latitude,
-                                    lng: s.location.longitude,
-                                    timestamp: s.date
-                                }));
+                                .map(s => {
+                                    const point = {
+                                        lat: s.location.latitude,
+                                        lng: s.location.longitude,
+                                        timestamp: s.date
+                                    };
+                                    // Add elevation if available (altitude in meters)
+                                    if (s.location.altitude !== undefined && s.location.altitude !== null) {
+                                        point.ele = s.location.altitude;
+                                    }
+                                    return point;
+                                });
 
                             if (path.length > 1) {
                                 const startTime = new Date(item.startDate);
@@ -2532,7 +2593,10 @@
                                 }
 
                                 if (eleEl) {
-                                    point.ele = parseFloat(eleEl.textContent);
+                                    const ele = parseFloat(eleEl.textContent);
+                                    if (!isNaN(ele)) {
+                                        point.ele = ele;
+                                    }
                                 }
 
                                 path.push(point);
@@ -2704,7 +2768,412 @@
                     }
                 });
             }
+            // Update elevation chart if visible
+            updateElevationChart();
         }
+
+        // Elevation Profile state
+        let elevationPanelVisible = false;
+        let elevationData = []; // Cached chart data
+        const debouncedElevationUpdate = debounce(updateElevationChart, 200);
+
+        function toggleElevationPanel() {
+            elevationPanelVisible = !elevationPanelVisible;
+            const panel = document.getElementById('elevationPanel');
+            const btn = document.getElementById('elevationBtn');
+
+            if (elevationPanelVisible) {
+                panel.classList.add('visible');
+                btn.style.background = '#1976D2'; // Darker blue when active
+                updateElevationChart();
+            } else {
+                panel.classList.remove('visible');
+                btn.style.background = '#2196F3'; // Original blue
+            }
+
+            // Tell the map to resize to fill the available space
+            setTimeout(() => {
+                if (is3DMode && map3d) {
+                    map3d.resize();
+                } else if (map) {
+                    map.invalidateSize();
+                }
+            }, 50);
+        }
+
+        function updateElevationChart() {
+            if (!elevationPanelVisible) return;
+
+            const canvas = document.getElementById('elevationCanvas');
+            const noDataEl = document.getElementById('elevationNoData');
+            const ctx = canvas.getContext('2d');
+
+            // Get map bounds (2D or 3D)
+            let bounds;
+            if (is3DMode && map3d) {
+                const b = map3d.getBounds();
+                bounds = {
+                    getSouth: () => b.getSouth(),
+                    getNorth: () => b.getNorth(),
+                    getWest: () => b.getWest(),
+                    getEast: () => b.getEast()
+                };
+            } else if (map) {
+                bounds = map.getBounds();
+            } else {
+                return;
+            }
+
+            // Ensure selectedActivities is populated
+            if (routes.length > 0 && selectedActivities.size === 0) {
+                routes.forEach(r => selectedActivities.add(r.activityType));
+            }
+
+            // Collect elevation data from visible routes within bounds
+            elevationData = [];
+            let globalMinEle = Infinity;
+            let globalMaxEle = -Infinity;
+            let runningOffset = 0; // Offset for concatenating multiple routes
+            let lastSegmentEndPoint = null; // Track last point for calculating gap distance
+
+            routes.forEach(route => {
+                // Skip if activity not selected
+                if (!selectedActivities.has(route.activityType)) return;
+
+                // Check if route has elevation data
+                const hasElevation = route.path.some(p => p.ele !== undefined);
+                if (!hasElevation) return;
+
+                // Filter points within bounds and build segments
+                let segmentPoints = [];
+                let cumulativeDistance = 0;
+                let prevPoint = null;
+                let firstPointInSegment = null;
+
+                route.path.forEach((point, idx) => {
+                    // Check if point is within bounds
+                    const inBounds = point.lat >= bounds.getSouth() &&
+                                    point.lat <= bounds.getNorth() &&
+                                    point.lng >= bounds.getWest() &&
+                                    point.lng <= bounds.getEast();
+
+                    // Calculate distance from previous point
+                    if (prevPoint) {
+                        cumulativeDistance += haversineDistance(prevPoint, point);
+                    }
+
+                    if (inBounds && point.ele !== undefined) {
+                        // Track first point for gap calculation
+                        if (!firstPointInSegment) {
+                            firstPointInSegment = point;
+                        }
+
+                        // Calculate grade (%)
+                        let grade = 0;
+                        if (segmentPoints.length > 0) {
+                            const lastPt = segmentPoints[segmentPoints.length - 1];
+                            const distDiff = (runningOffset + cumulativeDistance) - lastPt.distance;
+                            const eleDiff = point.ele - lastPt.elevation;
+                            if (distDiff > 0) {
+                                grade = (eleDiff / distDiff) * 100;
+                            }
+                        }
+
+                        segmentPoints.push({
+                            distance: runningOffset + cumulativeDistance,
+                            elevation: point.ele,
+                            lat: point.lat,
+                            lng: point.lng,
+                            grade: grade
+                        });
+
+                        if (point.ele < globalMinEle) globalMinEle = point.ele;
+                        if (point.ele > globalMaxEle) globalMaxEle = point.ele;
+                    }
+
+                    prevPoint = point;
+                });
+
+                if (segmentPoints.length > 1) {
+                    // Calculate gap from previous segment using GPS coordinates
+                    if (lastSegmentEndPoint && firstPointInSegment) {
+                        const gapDistance = haversineDistance(lastSegmentEndPoint, firstPointInSegment);
+                        // Adjust all points in this segment by the gap
+                        segmentPoints.forEach(pt => {
+                            pt.distance += gapDistance;
+                        });
+                        runningOffset += gapDistance;
+                    }
+
+                    elevationData.push({
+                        points: segmentPoints,
+                        color: getActivityColor(route.activityType),
+                        activityType: route.activityType
+                    });
+
+                    // Update for next route
+                    const lastPt = segmentPoints[segmentPoints.length - 1];
+                    runningOffset = lastPt.distance;
+                    lastSegmentEndPoint = { lat: lastPt.lat, lng: lastPt.lng };
+                }
+            });
+
+            const totalDistance = runningOffset;
+
+            // Show/hide no data message
+            if (elevationData.length === 0 || globalMinEle === Infinity) {
+                noDataEl.style.display = 'block';
+                canvas.style.display = 'none';
+                return;
+            }
+            noDataEl.style.display = 'none';
+            canvas.style.display = 'block';
+
+            // Set canvas size for retina
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+
+            // Chart dimensions
+            const padding = { top: 15, right: 15, bottom: 25, left: 50 };
+            const chartWidth = rect.width - padding.left - padding.right;
+            const chartHeight = rect.height - padding.top - padding.bottom;
+
+            // Add some padding to elevation range
+            const eleRange = globalMaxEle - globalMinEle;
+            const elePadding = Math.max(eleRange * 0.1, 10);
+            const minEle = globalMinEle - elePadding;
+            const maxEle = globalMaxEle + elePadding;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw grid lines
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 2]);
+
+            // Horizontal grid lines (elevation)
+            const eleSteps = 4;
+            for (let i = 0; i <= eleSteps; i++) {
+                const y = padding.top + (i / eleSteps) * chartHeight;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(padding.left + chartWidth, y);
+                ctx.stroke();
+            }
+
+            ctx.setLineDash([]);
+
+            // Draw axes labels
+            ctx.fillStyle = '#888';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+
+            // Y-axis labels (elevation)
+            for (let i = 0; i <= eleSteps; i++) {
+                const y = padding.top + (i / eleSteps) * chartHeight;
+                const ele = maxEle - (i / eleSteps) * (maxEle - minEle);
+                ctx.fillText(`${Math.round(ele)} m`, padding.left - 5, y);
+            }
+
+            // X-axis labels (distance)
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            const distSteps = 5;
+            for (let i = 0; i <= distSteps; i++) {
+                const x = padding.left + (i / distSteps) * chartWidth;
+                const dist = (i / distSteps) * totalDistance;
+                const label = dist >= 1000 ? `${(dist/1000).toFixed(1)} km` : `${Math.round(dist)} m`;
+                ctx.fillText(label, x, padding.top + chartHeight + 5);
+            }
+
+            // Draw elevation profiles
+            elevationData.forEach(segment => {
+                if (segment.points.length < 2) return;
+
+                ctx.beginPath();
+                ctx.strokeStyle = segment.color;
+                ctx.lineWidth = 2;
+
+                // Start path
+                const firstPt = segment.points[0];
+                const startX = padding.left + (firstPt.distance / totalDistance) * chartWidth;
+                const startY = padding.top + ((maxEle - firstPt.elevation) / (maxEle - minEle)) * chartHeight;
+                ctx.moveTo(startX, startY);
+
+                // Draw line
+                segment.points.forEach((pt, idx) => {
+                    if (idx === 0) return;
+                    const x = padding.left + (pt.distance / totalDistance) * chartWidth;
+                    const y = padding.top + ((maxEle - pt.elevation) / (maxEle - minEle)) * chartHeight;
+                    ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+
+                // Fill under line with gradient
+                ctx.beginPath();
+                ctx.moveTo(startX, padding.top + chartHeight);
+                ctx.lineTo(startX, startY);
+                segment.points.forEach((pt, idx) => {
+                    if (idx === 0) return;
+                    const x = padding.left + (pt.distance / totalDistance) * chartWidth;
+                    const y = padding.top + ((maxEle - pt.elevation) / (maxEle - minEle)) * chartHeight;
+                    ctx.lineTo(x, y);
+                });
+                const lastPt = segment.points[segment.points.length - 1];
+                const endX = padding.left + (lastPt.distance / totalDistance) * chartWidth;
+                ctx.lineTo(endX, padding.top + chartHeight);
+                ctx.closePath();
+
+                // Semi-transparent fill
+                ctx.fillStyle = segment.color + '30'; // Add alpha
+                ctx.fill();
+            });
+
+            // Store chart info for tooltip
+            canvas.chartInfo = {
+                padding, chartWidth, chartHeight,
+                minEle, maxEle, totalDistance,
+                segments: elevationData
+            };
+        }
+
+        // Haversine distance helper
+        function haversineDistance(p1, p2) {
+            const R = 6371000; // Earth radius in meters
+            const lat1 = p1.lat * Math.PI / 180;
+            const lat2 = p2.lat * Math.PI / 180;
+            const dLat = (p2.lat - p1.lat) * Math.PI / 180;
+            const dLng = (p2.lng - p1.lng) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1) * Math.cos(lat2) *
+                     Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Elevation chart tooltip and map marker
+        let elevationMapMarker = null; // Leaflet marker for 2D
+        let elevationMapMarker3d = null; // Mapbox marker for 3D
+
+        function showElevationMapMarker(lat, lng) {
+            if (is3DMode && map3d) {
+                // 3D mode - use Mapbox marker
+                if (!elevationMapMarker3d) {
+                    const el = document.createElement('div');
+                    el.style.cssText = `
+                        width: 28px;
+                        height: 28px;
+                        background: #2196F3;
+                        border: 4px solid white;
+                        border-radius: 50%;
+                        box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+                    `;
+                    elevationMapMarker3d = new mapboxgl.Marker({ element: el, anchor: 'center' })
+                        .setLngLat([lng, lat])
+                        .addTo(map3d);
+                } else {
+                    elevationMapMarker3d.setLngLat([lng, lat]);
+                    elevationMapMarker3d.getElement().style.display = '';
+                }
+            } else if (map) {
+                // 2D mode - use Leaflet marker
+                if (!elevationMapMarker) {
+                    const icon = L.divIcon({
+                        className: 'elevation-marker',
+                        html: '<div style="width: 28px; height: 28px; background: #2196F3; border: 4px solid white; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.5);"></div>',
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18]
+                    });
+                    elevationMapMarker = L.marker([lat, lng], { icon: icon, interactive: false }).addTo(map);
+                } else {
+                    elevationMapMarker.setLatLng([lat, lng]);
+                    if (!map.hasLayer(elevationMapMarker)) {
+                        elevationMapMarker.addTo(map);
+                    }
+                }
+            }
+        }
+
+        function hideElevationMapMarker() {
+            if (elevationMapMarker && map && map.hasLayer(elevationMapMarker)) {
+                map.removeLayer(elevationMapMarker);
+            }
+            if (elevationMapMarker3d) {
+                elevationMapMarker3d.getElement().style.display = 'none';
+            }
+        }
+
+        (function setupElevationTooltip() {
+            const canvas = document.getElementById('elevationCanvas');
+            const tooltip = document.getElementById('elevationTooltip');
+
+            canvas.addEventListener('mousemove', (e) => {
+                if (!canvas.chartInfo || elevationData.length === 0) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const { padding, chartWidth, chartHeight, minEle, maxEle, totalDistance, segments } = canvas.chartInfo;
+
+                // Check if within chart area
+                if (x < padding.left || x > padding.left + chartWidth ||
+                    y < padding.top || y > padding.top + chartHeight) {
+                    tooltip.classList.remove('visible');
+                    hideElevationMapMarker();
+                    return;
+                }
+
+                // Calculate distance at cursor position
+                const distanceAtCursor = ((x - padding.left) / chartWidth) * totalDistance;
+
+                // Find nearest point
+                let nearestPt = null;
+                let nearestDist = Infinity;
+
+                segments.forEach(segment => {
+                    segment.points.forEach(pt => {
+                        const d = Math.abs(pt.distance - distanceAtCursor);
+                        if (d < nearestDist) {
+                            nearestDist = d;
+                            nearestPt = pt;
+                        }
+                    });
+                });
+
+                if (nearestPt) {
+                    const distKm = nearestPt.distance / 1000;
+                    const distLabel = distKm >= 1 ? `${distKm.toFixed(2)} km` : `${Math.round(nearestPt.distance)} m`;
+                    tooltip.innerHTML = `Distance: ${distLabel}<br>Elevation: ${Math.round(nearestPt.elevation)} m<br>Grade: ${nearestPt.grade.toFixed(1)}%`;
+
+                    // Position tooltip above cursor, flip to left side if near right edge
+                    const tooltipWidth = 180; // Approximate tooltip width
+                    const panelRect = document.getElementById('elevationPanel').getBoundingClientRect();
+                    const rightEdge = x + 15 + tooltipWidth;
+
+                    if (rightEdge > panelRect.width) {
+                        // Position to the left of cursor
+                        tooltip.style.left = `${x - tooltipWidth - 10}px`;
+                    } else {
+                        tooltip.style.left = `${x + 15}px`;
+                    }
+                    tooltip.style.top = `${y - 75}px`;
+                    tooltip.classList.add('visible');
+
+                    // Show marker on map at this location
+                    showElevationMapMarker(nearestPt.lat, nearestPt.lng);
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+                hideElevationMapMarker();
+            });
+        })();
 
         async function processPhoto(file) {
             // Check if photo already exists (by filename)
@@ -4841,6 +5310,9 @@
             map3d.on('pitch', throttledDepthUpdate);
             map3d.on('rotate', throttledDepthUpdate);
 
+            // Update elevation chart on 3D map move
+            map3d.on('moveend', debouncedElevationUpdate);
+
             // Initial update
             update3DMarkerDepths();
         }
@@ -4885,13 +5357,18 @@
                 const defaultStyleKey = mapboxApiKey ? 'mapbox-streets' : 'humanitarian';
                 const defaultStyle = mapStyles[defaultStyleKey];
                 let tileUrl = defaultStyle.url;
-                if (mapboxApiKey && defaultStyle.requiresKey) {
+                if (mapboxApiKey && defaultStyle.requiresApiKey) {
                     tileUrl = tileUrl.replace('{accessToken}', mapboxApiKey);
                 }
-                currentTileLayer = L.tileLayer(tileUrl, {
+                const tileOptions = {
                     attribution: defaultStyle.attribution,
                     maxZoom: 19
-                }).addTo(map);
+                };
+                // Add Mapbox-specific tile options
+                if (defaultStyle.tileSize) tileOptions.tileSize = defaultStyle.tileSize;
+                if (defaultStyle.zoomOffset) tileOptions.zoomOffset = defaultStyle.zoomOffset;
+
+                currentTileLayer = L.tileLayer(tileUrl, tileOptions).addTo(map);
                 mapStyleSelect.value = defaultStyleKey;
 
                 // Update spider positions on zoom
@@ -4908,6 +5385,8 @@
                         center: map.getCenter(),
                         zoom: map.getZoom()
                     };
+                    // Update elevation chart on map move (debounced)
+                    debouncedElevationUpdate();
                 });
             }
 
@@ -4925,10 +5404,15 @@
             });
             routePolylines = [];
 
+            // Ensure selectedActivities is populated before drawing routes
+            if (routes.length > 0 && selectedActivities.size === 0) {
+                routes.forEach(r => selectedActivities.add(r.activityType));
+            }
+
             // Draw routes first (so they appear under markers)
             routes.forEach((route, index) => {
                 const color = getActivityColor(route.activityType);
-                
+
                 // Draw white border first (wider line)
                 const borderLine = L.polyline(route.path, {
                     color: '#ffffff',
@@ -5371,6 +5855,7 @@
 
             if (photoMarkersMode) {
                 btn.textContent = 'Number Markers';
+                btn.style.background = '#388E3C'; // Darker green when active
                 sliderOverlay.style.display = 'flex';
                 // Position slider overlay based on view mode (3D controls on right, 2D on left)
                 sliderOverlay.style.left = is3DMode ? '10px' : '50px';
@@ -5386,6 +5871,7 @@
                 }
             } else {
                 btn.textContent = 'Photo Markers';
+                btn.style.background = '#4CAF50'; // Original green
                 sliderOverlay.style.display = 'none';
                 photoSizeControl.style.display = 'none';
                 numberSizeControl.style.display = 'none';
@@ -6750,6 +7236,12 @@
 
                 ctx.save();
 
+                // Draw shadow first (two shadows like the CSS)
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 8 * pixelRatio;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 4 * pixelRatio;
+
                 // Gradient background
                 const gradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
                 gradient.addColorStop(0, '#667eea');
@@ -6759,6 +7251,19 @@
                 ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
                 ctx.fillStyle = gradient;
                 ctx.fill();
+
+                // Second shadow layer (larger, softer)
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowBlur = 20 * pixelRatio;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 8 * pixelRatio;
+                ctx.fill();
+
+                // Disable shadow for border
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
 
                 // White border
                 ctx.strokeStyle = 'white';
@@ -6864,13 +7369,27 @@
 
                 ctx.restore();
 
-                // Draw circle border
+                // Draw circle border with shadow
                 ctx.save();
+
+                // Add shadow to the border circle
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 8 * pixelRatio;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 4 * pixelRatio;
+
                 ctx.beginPath();
                 ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2, 0, Math.PI * 2);
                 ctx.strokeStyle = 'white';
                 ctx.lineWidth = 3 * pixelRatio;
                 ctx.stroke();
+
+                // Second shadow layer
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                ctx.shadowBlur = 20 * pixelRatio;
+                ctx.shadowOffsetY = 8 * pixelRatio;
+                ctx.stroke();
+
                 ctx.restore();
             }
 
