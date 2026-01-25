@@ -47,7 +47,7 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: #555;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             overflow: hidden;
@@ -56,25 +56,28 @@
         }
 
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000;
             color: white;
-            padding: 15px 30px;
+            padding: 8px 30px;
             text-align: center;
         }
 
         h1 {
-            font-size: 1.5em;
-            margin: 0 0 5px 0;
+            font-size: 1.3em;
+            margin: 0 0 2px 0;
         }
 
         .subtitle {
-            opacity: 0.9;
-            font-size: 0.85em;
+            opacity: 0.8;
+            font-size: 0.8em;
+            margin-bottom: 2px;
         }
 
         .upload-section {
-            padding: 20px 30px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 30px;
+            border-bottom: 1px solid #444;
+            background: #333;
+            color: white;
         }
 
         .upload-button {
@@ -106,7 +109,9 @@
         }
 
         .upload-button:active:not(:disabled) {
-            transform: translateY(0);
+            background: #4a5bb8;
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
         }
         
         .upload-button:disabled {
@@ -145,19 +150,21 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             padding: 30px;
+            background: #555;
         }
 
         .photo-card {
-            background: white;
-            border: 1px solid #e0e0e0;
+            background: #e8e8e8;
+            border: none;
             border-radius: 8px;
             transition: all 0.3s;
             position: relative;
             z-index: 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
         }
 
         .photo-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
             transform: translateY(-2px);
         }
         
@@ -185,7 +192,12 @@
             background: rgba(200, 35, 51, 1);
             transform: scale(1.1);
         }
-        
+
+        .photo-delete-btn:active {
+            background: rgba(160, 25, 40, 1);
+            transform: scale(0.95);
+        }
+
         .gps-input-row {
             display: flex;
             align-items: center;
@@ -237,7 +249,12 @@
             background: #f5f5f5;
             border-color: #999;
         }
-        
+
+        .gps-btn:active:not(:disabled) {
+            background: #e8e8e8;
+            transform: scale(0.97);
+        }
+
         .photo-card.highlight-moved {
             animation: highlightPulse 1.5s ease-out;
         }
@@ -306,7 +323,12 @@
         .lightbox-close:hover {
             background: rgba(255,255,255,0.3);
         }
-        
+
+        .lightbox-close:active {
+            background: rgba(255,255,255,0.4);
+            transform: scale(0.95);
+        }
+
         .lightbox-nav {
             position: absolute;
             top: 50%;
@@ -324,7 +346,12 @@
         .lightbox-nav:hover {
             background: rgba(255,255,255,0.3);
         }
-        
+
+        .lightbox-nav:active:not(:disabled) {
+            background: rgba(255,255,255,0.4);
+            transform: translateY(-50%) scale(0.95);
+        }
+
         .lightbox-nav:disabled {
             opacity: 0.3;
             cursor: not-allowed;
@@ -445,6 +472,11 @@
             background: white;
         }
 
+        .reset-pan:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+
         .zoom-controls {
             position: absolute;
             bottom: 5px;
@@ -479,8 +511,8 @@
 
         .map-style-selector {
             padding: 8px 15px;
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
+            background: #333;
+            border-bottom: 1px solid #444;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -489,7 +521,7 @@
 
         .map-style-selector label {
             font-weight: 500;
-            color: #333;
+            color: white;
         }
 
         .map-style-selector select {
@@ -518,7 +550,12 @@
         }
 
         #activityCheckboxes label:hover {
-            background: #e9ecef !important;
+            background: #666 !important;
+        }
+
+        #activityCheckboxes label:active {
+            background: #555 !important;
+            transform: scale(0.97);
         }
 
         .photo-info {
@@ -597,7 +634,13 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
         }
-        
+
+        .map-button:active:not(:disabled) {
+            background: #1e8449;
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(39, 174, 96, 0.3);
+        }
+
         .map-button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
@@ -631,6 +674,12 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
 
+        .save-button:active:not(:disabled) {
+            background: #4a5bb8;
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(102, 126, 234, 0.3);
+        }
+
         .save-button:disabled {
             background: #bdc3c7;
             cursor: not-allowed;
@@ -661,6 +710,94 @@
             background: #c0392b;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        .clear-button:active {
+            background: #a93226;
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(231, 76, 60, 0.3);
+        }
+
+        .mapbox-key-btn {
+            margin-left: 5px;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 16px;
+            line-height: 34px;
+            text-align: center;
+            cursor: pointer;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        .mapbox-key-btn:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .mapbox-key-btn:active {
+            background: #e0e0e0;
+            transform: translateY(1px);
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .dialog-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dialog-btn-cancel {
+            border: 1px solid #ccc;
+            background: white;
+            color: #333;
+        }
+
+        .dialog-btn-cancel:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .dialog-btn-cancel:active {
+            background: #e0e0e0;
+            transform: translateY(1px);
+        }
+
+        .dialog-btn-danger {
+            border: 1px solid #e74c3c;
+            background: white;
+            color: #e74c3c;
+        }
+
+        .dialog-btn-danger:hover {
+            background: #fdf2f2;
+            border-color: #c0392b;
+        }
+
+        .dialog-btn-danger:active {
+            background: #f8d7da;
+            transform: translateY(1px);
+        }
+
+        .dialog-btn-primary {
+            border: none;
+            background: #667eea;
+            color: white;
+        }
+
+        .dialog-btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .dialog-btn-primary:active {
+            background: #4a5bb8;
+            transform: translateY(1px);
         }
 
         .map-modal {
@@ -724,8 +861,8 @@
         }
 
         .map-header {
-            padding: 10px 15px;
-            background: #667eea;
+            padding: 8px 15px;
+            background: #000;
             color: white;
             display: flex;
             justify-content: space-between;
@@ -753,6 +890,11 @@
             background: rgba(255,255,255,0.3);
         }
 
+        .close-button:active {
+            background: rgba(255,255,255,0.15);
+            transform: scale(0.95);
+        }
+
         #mapContainer {
             position: relative;
             width: 100%;
@@ -765,34 +907,29 @@
             height: 100%;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
+        #statusLine {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            font-size: 13px;
+            color: #ddd;
+            padding: 8px 30px;
+            min-height: 18px;
+            display: none;
         }
 
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
+        #statusLine:not(:empty) {
+            display: block;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        #statusLine::after {
+            content: '▋';
+            animation: blink 1s step-end infinite;
+            color: #667eea;
+            margin-left: 2px;
         }
 
-        .error-message {
-            background: #fee;
-            color: #c33;
-            padding: 15px;
-            margin: 20px 30px;
-            border-radius: 8px;
-            border-left: 4px solid #c33;
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
         }
 
         @media (max-width: 768px) {
@@ -899,7 +1036,12 @@
         #gallerySaveBtn:hover:not(:disabled) {
             background: rgba(255, 255, 255, 0.3) !important;
         }
-        
+
+        #gallerySaveBtn:active:not(:disabled) {
+            background: rgba(255, 255, 255, 0.4) !important;
+            transform: scale(0.97);
+        }
+
         #gallerySaveBtn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -1019,12 +1161,15 @@
 
 .ctrl-btn.green { background:#4CAF50; }
 .ctrl-btn.green:hover { background:#43a047; }
+.ctrl-btn.green:active { background:#388e3c; transform: scale(0.97); }
 
 .ctrl-btn.blue { background:#2196F3; }
 .ctrl-btn.blue:hover { background:#1e88e5; }
+.ctrl-btn.blue:active { background:#1976d2; transform: scale(0.97); }
 
 .ctrl-btn.red { background:#f44336; }
 .ctrl-btn.red:hover { background:#e53935; }
+.ctrl-btn.red:active { background:#c62828; transform: scale(0.97); }
 
 .ctrl-btn[disabled] {
   background: #9e9e9e !important;
@@ -1051,9 +1196,9 @@
 }
 
 .photo-popup-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #000;
     color: white;
-    padding: 10px 12px;
+    padding: 8px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1243,6 +1388,7 @@
     height: 100%;
     overflow: hidden;
     position: relative;
+    will-change: transform; /* GPU acceleration hint */
 }
 
 .photo-marker-img {
@@ -1250,6 +1396,7 @@
     transform-origin: top left;
     cursor: grab;
     user-select: none;
+    will-change: transform; /* GPU acceleration for smooth panning/zooming */
 }
 
 .photo-marker-img:active {
@@ -1369,22 +1516,22 @@
 <body>
     <div class="container">
         <header>
-            <h1 style="margin: 0 0 5px 0; font-size: 1.5em;">Photo Location Mapper</h1>
-            <div class="subtitle" style="font-size: 0.85em;">Extract GPS data from photos and visualize on a map</div>
-            <div style="font-size: 0.7em; opacity: 0.7; margin-top: 4px;">v1.1.0 build 63</div>
+            <h1 style="margin: 0 0 2px 0; font-size: 1.3em;">Photo Location Mapper</h1>
+            <div class="subtitle" style="font-size: 0.8em;">Extract GPS data from photos and visualize on a map</div>
+            <div style="font-size: 0.65em; opacity: 0.6; margin-top: 1px;">v1.1.0 build 74</div>
         </header>
 
         <div class="upload-section">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
                 <div style="display: flex; gap: 10px;">
-                    <button class="ctrl-btn blue" id="selectPhotosButton">Select Photos</button>
+                    <button class="ctrl-btn blue" id="selectPhotosButton" title="Select photos or drag and drop photos anywhere on this page">Select Photos</button>
                     <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/heic,image/heif" multiple style="display: none;">
                     
                     <button class="ctrl-btn blue" id="routeButton" title="Load route file (GPX or Google Takeout JSON)">Load Route</button>
                     <input type="file" id="routeInput" accept=".gpx,.json,.gz" style="display: none;">
                 </div>
                 
-                <div id="stats" style="display: none; font-size: 0.9em; color: #555;">
+                <div id="stats" style="display: none; font-size: 0.9em; color: #aaa;">
                     <span class="stats-item"><span id="photoCount">0</span> photos</span>
                     <span class="stats-item"><span id="gpsCount">0</span> GPS</span>
                     <span class="stats-item" id="dateRangeStats" style="display: none;"><span id="dateRange"></span></span>
@@ -1397,19 +1544,9 @@
                     <button class="ctrl-btn red" id="clearButton" disabled>Clear All</button>
                 </div>
             </div>
-            
-            <div style="margin-top: 8px; font-size: 0.85em; color: #666;">
-                Or drag and drop photos anywhere on this page
-                <span id="lastPathsInfo" style="margin-left: 15px; color: #888;"></span>
-            </div>
         </div>
 
-        <div id="loadingIndicator" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <div>Processing photos...</div>
-        </div>
-
-        <div id="errorContainer"></div>
+        <div id="statusLine"></div>
 
         <div class="photos-grid" id="photosGrid"></div>
 
@@ -1422,7 +1559,7 @@
                 <button class="close-button" id="closeMapButton">×</button>
             </div>
             <div class="map-style-selector">
-                <label for="mapStyleSelect">🗺️ Map Style:</label>
+                <label for="mapStyleSelect">Map Style:</label>
                 <select id="mapStyleSelect">
                     <option value="osm">Street Map (Standard navigation)</option>
                     <option value="satellite">Satellite (Aerial imagery)</option>
@@ -1435,17 +1572,18 @@
                         <option value="mapbox-satellite-streets">Mapbox Satellite Streets</option>
                     </optgroup>
                 </select>
-                <button id="mapboxKeyBtn" style="margin-left: 5px; padding: 2px 8px; font-size: 11px; cursor: pointer;" title="Configure Mapbox API key">🔑</button>
-                <button id="toggle3DBtn" class="save-button" style="margin-left: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: none;" title="Toggle 3D terrain view (requires Mapbox API key)">🏔️ 3D View</button>
+                <button id="mapboxKeyBtn" class="mapbox-key-btn" title="Configure Mapbox API key">🔑</button>
+                <button id="toggle3DBtn" class="save-button" style="margin-left: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: none;" title="Toggle 3D terrain view (requires Mapbox API key)">3D</button>
+                <button id="resetViewBtn" class="save-button" style="margin-left: 5px;" title="Reset view to show all markers">Reset</button>
 
                 <div id="routeFilterContainer" style="display: none; margin-left: 30px; flex: 1; align-items: center;">
-                    <label>📍 Show Activities:</label>
+                    <label>Show Activities:</label>
                     <div id="activityCheckboxes" style="display: inline-flex; flex-wrap: wrap; gap: 10px; margin-left: 10px;">
                     </div>
                 </div>
                 
-                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);" title="Show photo thumbnails on map. Drag to pan image within circle. Hold Alt/Option + drag to move marker.">📷 Photo Markers</button>
-                <button class="save-button" id="mapSaveBtn" style="margin-left: 10px;">💾 Save Map as JPEG</button>
+                <button class="save-button" id="photoMarkersBtn" style="margin-left: auto; background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);" title="Show photo thumbnails on map. Drag to pan image within circle. Hold Alt/Option + drag to move marker.">Photo Markers</button>
+                <button class="save-button" id="mapSaveBtn" style="margin-left: 10px;">Save Map Image</button>
             </div>
             <div id="mapContainer" style="position: relative;">
                 <div id="map"></div>
@@ -1479,7 +1617,7 @@
             <div class="map-header">
                 <h2>Gallery</h2>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <button id="gallerySaveBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: background 0.2s;">💾 Save as JPEG</button>
+                    <button id="gallerySaveBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em; font-weight: 500; transition: background 0.2s;">Save as JPEG</button>
                     <button class="close-button" id="closeGalleryButton">×</button>
                 </div>
             </div>
@@ -1505,20 +1643,46 @@
 
     <!-- Mapbox API Key Dialog -->
     <div id="mapboxKeyDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 24px; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-            <h3 style="margin: 0 0 16px 0; font-size: 18px;">Mapbox API Key</h3>
+        <div style="background: white; border-radius: 12px; max-width: 450px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); overflow: hidden;">
+            <h3 style="margin: 0; padding: 12px 24px; font-size: 16px; background: #000; color: white;">Mapbox API Key</h3>
+            <div style="padding: 20px 24px;">
             <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">Enter your Mapbox API key to enable 3D terrain view and additional map styles.</p>
             <p style="margin: 0 0 16px 0; font-size: 13px;"><a href="https://www.mapbox.com/" target="_blank" style="color: #667eea;">Get a free key at mapbox.com →</a></p>
             <input type="text" id="mapboxKeyInput" placeholder="pk.eyJ1Ijoi..." style="width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 16px; font-family: monospace;">
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button id="mapboxKeyCancelBtn" style="padding: 8px 16px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; background: white; cursor: pointer;">Cancel</button>
-                <button id="mapboxKeyClearBtn" style="padding: 8px 16px; font-size: 14px; border: 1px solid #e74c3c; border-radius: 6px; background: white; color: #e74c3c; cursor: pointer;">Clear Key</button>
-                <button id="mapboxKeySaveBtn" style="padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #667eea; color: white; cursor: pointer;">Save</button>
+                <button id="mapboxKeyCancelBtn" class="dialog-btn dialog-btn-cancel">Cancel</button>
+                <button id="mapboxKeyClearBtn" class="dialog-btn dialog-btn-danger">Clear Key</button>
+                <button id="mapboxKeySaveBtn" class="dialog-btn dialog-btn-primary">Save</button>
+            </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Performance utilities
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function executedFunction(...args) {
+                if (!inThrottle) {
+                    func(...args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
         let photos = [];
         let routes = [];
         let routePolylines = [];
@@ -1548,8 +1712,8 @@
         let SPIDER_SPREAD = 1.5; // Spread multiplier for spider/rubberband clustering
 
         // Independent 3D view size settings
-        let PHOTO_MARKER_SIZE_3D = 70; // pixels, adjustable via slider (3D view)
-        let BADGE_SCALE_3D = 1; // Scale factor for number badges (3D view)
+        let PHOTO_MARKER_SIZE_3D = 280; // pixels, adjustable via slider (3D view)
+        let BADGE_SCALE_3D = 2; // Scale factor for number badges (3D view)
 
         // Map state tracking - remembers user's map configuration during session
         let userHasInteractedWithMap = false; // True once user has zoomed/panned/configured map
@@ -1575,9 +1739,8 @@
         const closeMapButton = document.getElementById('closeMapButton');
         const closeGalleryButton = document.getElementById('closeGalleryButton');
         const gallerySaveBtn = document.getElementById('gallerySaveBtn');
-        const loadingIndicator = document.getElementById('loadingIndicator');
+        const statusLine = document.getElementById('statusLine');
         const stats = document.getElementById('stats');
-        const errorContainer = document.getElementById('errorContainer');
         const mapStyleSelect = document.getElementById('mapStyleSelect');
         const container = document.querySelector('.container');
         
@@ -1610,33 +1773,11 @@
                 const existing = loadSavedPaths();
                 const updated = { ...existing, ...paths };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-                displaySavedPaths();
             } catch (e) {
                 console.log('Could not save paths:', e);
             }
         }
         
-        function displaySavedPaths() {
-            const paths = loadSavedPaths();
-            const infoEl = document.getElementById('lastPathsInfo');
-            if (!infoEl) return;
-            
-            const parts = [];
-            if (paths.photosFolder) {
-                parts.push(`📷 ${paths.photosFolder}`);
-            }
-            if (paths.routesFolder) {
-                parts.push(`🗺️ ${paths.routesFolder}`);
-            }
-            
-            if (parts.length > 0) {
-                infoEl.innerHTML = `<span style="color: #999;">Last used:</span> ${parts.join(' • ')}`;
-            }
-        }
-        
-        // Display saved paths on load
-        displaySavedPaths();
-
         // Button clicks trigger file inputs
         // Use setTimeout to help with macOS focus issues after file dialogs
         selectPhotosButton.addEventListener('click', () => {
@@ -1667,15 +1808,113 @@
         const markerSizeValue = document.getElementById('markerSizeValue');
         const markerSizeControl = document.getElementById('markerSizeControl');
 
+        // Performance threshold for hiding photo images during slider drag
+        const SLIDER_PERF_THRESHOLD = 5;
+        let sliderDragging = false;
+
+        // Hide photo images and show placeholder circles during slider drag (2D performance mode)
+        function setPhotoMarkersPlaceholderMode(enabled) {
+            photoMarkers.forEach(pm => {
+                if (pm.marker) {
+                    const el = pm.marker.getElement();
+                    if (el) {
+                        const img = el.querySelector('.photo-marker-img');
+                        const container = el.querySelector('.photo-marker-container');
+                        if (img && container) {
+                            if (enabled) {
+                                img.style.visibility = 'hidden';
+                                container.style.background = '#888';
+                            } else {
+                                img.style.visibility = 'visible';
+                                container.style.background = '';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update 2D photo marker circle sizes in-place without full re-render
+        function updatePhotoMarkerSizes(size) {
+            const shadowPadding = 40;
+            const totalSize = size + shadowPadding * 2;
+            photoMarkers.forEach(pm => {
+                if (pm.marker) {
+                    const el = pm.marker.getElement();
+                    if (el) {
+                        // Update Leaflet wrapper element
+                        el.style.width = totalSize + 'px';
+                        el.style.height = totalSize + 'px';
+                        // Update inner wrapper div (first child)
+                        const wrapper = el.firstElementChild;
+                        if (wrapper) {
+                            wrapper.style.width = totalSize + 'px';
+                            wrapper.style.height = totalSize + 'px';
+                        }
+                        // Update .photo-marker div
+                        const photoMarker = el.querySelector('.photo-marker');
+                        if (photoMarker) {
+                            photoMarker.style.width = size + 'px';
+                            photoMarker.style.height = size + 'px';
+                        }
+                    }
+                    // Update icon size/anchor
+                    const icon = pm.marker.getIcon();
+                    if (icon && icon.options) {
+                        icon.options.iconSize = [totalSize, totalSize];
+                        icon.options.iconAnchor = [totalSize / 2, totalSize / 2];
+                    }
+                }
+            });
+        }
+
+        // Update 2D number badge sizes in-place without full re-render
+        function updateNumberBadgeSizes(scale) {
+            const badgeSize = Math.round(BASE_BADGE_SIZE * scale);
+            const badgeFontSize = Math.round(14 * scale);
+            const badgePadding = Math.round(6 * scale);
+            const badgeBorderRadius = badgeSize / 2;
+            const badgeBorder = Math.max(2, Math.round(2 * scale));
+
+            numberBadgeMarkers.forEach(badgeMarker => {
+                if (badgeMarker) {
+                    const el = badgeMarker.getElement();
+                    if (el) {
+                        const badge = el.querySelector('.orbital-badge');
+                        if (badge) {
+                            badge.style.minWidth = badgeSize + 'px';
+                            badge.style.height = badgeSize + 'px';
+                            badge.style.fontSize = badgeFontSize + 'px';
+                            badge.style.padding = '0 ' + badgePadding + 'px';
+                            badge.style.borderRadius = badgeBorderRadius + 'px';
+                            badge.style.borderWidth = badgeBorder + 'px';
+                            badge.style.lineHeight = (badgeSize - badgeBorder * 2) + 'px';
+                        }
+                    }
+                }
+            });
+        }
+
+        // Debounced marker refresh for slider performance
+        const debouncedMarkerRefresh = debounce(() => {
+            if (photoMarkersMode) {
+                if (is3DMode) {
+                    add3DMarkers();
+                } else {
+                    showPhotoMarkers();
+                }
+            }
+        }, 150);
+
         markerSizeSlider.addEventListener('input', () => {
             const newSize = parseInt(markerSizeSlider.value);
 
             if (is3DMode) {
-                // 3D mode uses independent size variable
+                // 3D mode - always dynamic (only one photo shown at a time)
                 PHOTO_MARKER_SIZE_3D = newSize;
                 markerSizeValue.textContent = PHOTO_MARKER_SIZE_3D + 'px';
                 if (photoMarkersMode) {
-                    add3DMarkers(); // Refresh 3D markers with new size
+                    add3DMarkers();
                 }
             } else {
                 // 2D mode
@@ -1695,9 +1934,27 @@
                     }
                 });
 
+                // Always resize circles dynamically
                 if (photoMarkersMode) {
-                    showPhotoMarkers(); // Refresh with new size
+                    const photosWithGPS = photos.filter(p => p.gps && p.gps.hasGPS);
+                    // Hide images during drag for many photos (performance)
+                    if (photosWithGPS.length > SLIDER_PERF_THRESHOLD && !sliderDragging) {
+                        sliderDragging = true;
+                        setPhotoMarkersPlaceholderMode(true);
+                    }
+                    updatePhotoMarkerSizes(newSize);
                 }
+            }
+        });
+
+        markerSizeSlider.addEventListener('change', () => {
+            // Slider released - restore images and do full re-render
+            if (!is3DMode && photoMarkersMode) {
+                if (sliderDragging) {
+                    sliderDragging = false;
+                    setPhotoMarkersPlaceholderMode(false);
+                }
+                showPhotoMarkers();
             }
         });
 
@@ -1709,18 +1966,18 @@
             const newScale = parseFloat(numberMarkerSizeSlider.value);
 
             if (is3DMode) {
-                // 3D mode uses independent badge scale
+                // 3D mode - always dynamic
                 BADGE_SCALE_3D = newScale;
                 numberMarkerSizeValue.textContent = BADGE_SCALE_3D + 'x';
                 if (photoMarkersMode) {
-                    add3DMarkers(); // Refresh 3D markers with new badge size
+                    add3DMarkers();
                 }
             } else {
-                // 2D mode
+                // 2D mode - dynamic resize (badges are small/vector-based)
                 BADGE_SCALE = newScale;
                 numberMarkerSizeValue.textContent = BADGE_SCALE + 'x';
                 if (photoMarkersMode) {
-                    showPhotoMarkers(); // Refresh with new badge size
+                    updateNumberBadgeSizes(newScale);
                 }
             }
         });
@@ -1731,9 +1988,7 @@
         spiderSpreadSlider.addEventListener('input', () => {
             SPIDER_SPREAD = parseFloat(spiderSpreadSlider.value);
             spiderSpreadValue.textContent = SPIDER_SPREAD + 'x';
-            if (photoMarkersMode && is3DMode) {
-                add3DMarkers(); // Refresh 3D markers with new spread
-            }
+            debouncedMarkerRefresh();
         });
 
         clearButton.addEventListener('click', clearAll);
@@ -1805,6 +2060,7 @@
         mapStyleSelect.addEventListener('change', changeMapStyle);
         document.getElementById('mapboxKeyBtn').addEventListener('click', showMapboxKeyDialog);
         document.getElementById('toggle3DBtn').addEventListener('click', toggle3DView);
+        document.getElementById('resetViewBtn').addEventListener('click', resetView);
 
         // Mapbox API key dialog buttons
         document.getElementById('mapboxKeySaveBtn').addEventListener('click', saveMapboxKey);
@@ -1874,15 +2130,14 @@
             );
 
             if (imageFiles.length > 0) {
-                loadingIndicator.style.display = 'block';
-                errorContainer.innerHTML = '';
-                
-                for (const file of imageFiles) {
+                for (let i = 0; i < imageFiles.length; i++) {
+                    const file = imageFiles[i];
+                    setStatus(`Processing ${file.name} (${i + 1}/${imageFiles.length})...`);
                     try {
                         await processPhoto(file);
                     } catch (error) {
                         console.error(`Error processing ${file.name}:`, error);
-                        showError(`Failed to process ${file.name}: ${error.message}`);
+                        setStatus(`Failed to process ${file.name}: ${error.message}`, 4000);
                     }
                 }
 
@@ -1893,7 +2148,7 @@
                     return a.gps.dateTimeObj - b.gps.dateTimeObj;
                 });
 
-                loadingIndicator.style.display = 'none';
+                clearStatus();
                 updateStats();
                 renderPhotos();
                 
@@ -1920,15 +2175,14 @@
                 savePaths({ photosFolder: `(${files.length} photos loaded ${new Date().toLocaleDateString()})` });
             }
 
-            loadingIndicator.style.display = 'block';
-            errorContainer.innerHTML = '';
-            
-            for (const file of files) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                setStatus(`Processing ${file.name} (${i + 1}/${files.length})...`);
                 try {
                     await processPhoto(file);
                 } catch (error) {
                     console.error(`Error processing ${file.name}:`, error);
-                    showError(`Failed to process ${file.name}: ${error.message}`);
+                    setStatus(`Failed to process ${file.name}: ${error.message}`, 4000);
                 }
             }
 
@@ -1937,12 +2191,12 @@
                 // Photos without GPS or datetime go to the end
                 if (!a.gps || !a.gps.dateTimeObj) return 1;
                 if (!b.gps || !b.gps.dateTimeObj) return -1;
-                
+
                 // Sort by datetime
                 return a.gps.dateTimeObj - b.gps.dateTimeObj;
             });
 
-            loadingIndicator.style.display = 'none';
+            clearStatus();
             updateStats();
             renderPhotos();
             
@@ -1959,9 +2213,7 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            const loadingText = loadingIndicator.querySelector('div:last-child');
-            loadingIndicator.style.display = 'block';
-            loadingText.textContent = `Loading ${file.name}...`;
+            setStatus(`Loading ${file.name}...`);
 
             try {
                 const routesBefore = routes.length;
@@ -1985,18 +2237,15 @@
 
                 const routesAdded = routes.length - routesBefore;
 
-                loadingIndicator.style.display = 'none';
-
                 if (routesAdded === 0) {
-                    showError(`No routes found in ${file.name}`, 'warning');
+                    setStatus(`No routes found in ${file.name}`, 4000);
                 } else {
-                    showError(`✓ Loaded ${routesAdded} route${routesAdded !== 1 ? 's' : ''} from ${file.name}`, 'success');
+                    setStatus(`Loaded ${routesAdded} route${routesAdded !== 1 ? 's' : ''} from ${file.name}`, 3000);
                 }
 
             } catch (error) {
-                loadingIndicator.style.display = 'none';
                 console.error('Error loading route file:', error);
-                showError(`Error loading ${file.name}: ${error.message}`, 'error');
+                setStatus(`Error loading ${file.name}: ${error.message}`, 5000);
             }
 
             updateStats();
@@ -2153,6 +2402,69 @@
             return total;
         }
 
+        // Show activity type selection dialog
+        function showActivityTypeDialog(trackName, inferredType) {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:10001;display:flex;align-items:center;justify-content:center;';
+
+                const dialog = document.createElement('div');
+                dialog.style.cssText = 'background:white;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.3);overflow:hidden;';
+
+                const title = document.createElement('h3');
+                title.style.cssText = 'margin:0;padding:12px 20px;font-size:16px;background:#000;color:white;';
+                title.textContent = 'Select Activity Type';
+
+                const content = document.createElement('div');
+                content.style.cssText = 'padding:20px;';
+
+                const desc = document.createElement('p');
+                desc.style.cssText = 'margin:0 0 15px 0;font-size:14px;color:#666;';
+                desc.textContent = trackName
+                    ? `The route "${trackName}" has no activity type. Please select one:`
+                    : 'This GPX file has no activity type. Please select one:';
+                content.appendChild(desc);
+
+                if (inferredType && inferredType !== 'unknown') {
+                    const hint = document.createElement('p');
+                    hint.style.cssText = 'margin:0 0 15px 0;font-size:13px;color:#888;font-style:italic;';
+                    hint.textContent = `Based on speed, this looks like: ${inferredType}`;
+                    content.appendChild(hint);
+                }
+
+                const activities = ['walking', 'running', 'cycling', 'driving'];
+                const colors = { walking: '#4CAF50', running: '#FF9800', cycling: '#2196F3', driving: '#9C27B0' };
+
+                const btnContainer = document.createElement('div');
+                btnContainer.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+
+                activities.forEach(activity => {
+                    const btn = document.createElement('button');
+                    btn.style.cssText = `padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;color:white;background:${colors[activity]};transition:opacity 0.2s;`;
+                    btn.textContent = activity.charAt(0).toUpperCase() + activity.slice(1);
+                    if (activity === inferredType) {
+                        btn.style.outline = '3px solid #333';
+                        btn.style.outlineOffset = '2px';
+                    }
+                    btn.addEventListener('mouseover', () => btn.style.opacity = '0.85');
+                    btn.addEventListener('mouseout', () => { btn.style.opacity = '1'; btn.style.transform = ''; });
+                    btn.addEventListener('mousedown', () => { btn.style.opacity = '0.7'; btn.style.transform = 'scale(0.97)'; });
+                    btn.addEventListener('mouseup', () => { btn.style.opacity = '0.85'; btn.style.transform = ''; });
+                    btn.addEventListener('click', () => {
+                        document.body.removeChild(overlay);
+                        resolve(activity);
+                    });
+                    btnContainer.appendChild(btn);
+                });
+
+                content.appendChild(btnContainer);
+                dialog.appendChild(title);
+                dialog.appendChild(content);
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
+            });
+        }
+
         async function parseGPXFile(file) {
             try {
                 const text = await file.text();
@@ -2168,25 +2480,39 @@
                 // Parse all tracks (<trk> elements)
                 const tracks = xml.querySelectorAll('trk');
 
-                tracks.forEach(track => {
+                // Helper to infer activity type from average speed (km/h)
+                function inferActivityFromSpeed(avgSpeedKmh) {
+                    if (avgSpeedKmh < 1) return 'stationary';
+                    if (avgSpeedKmh < 7) return 'walking';      // < 7 km/h
+                    if (avgSpeedKmh < 15) return 'running';     // 7-15 km/h
+                    if (avgSpeedKmh < 40) return 'cycling';     // 15-40 km/h
+                    return 'driving';                            // > 40 km/h
+                }
+
+                // Collect routes that need activity type selection
+                const pendingRoutes = [];
+                let needsUserInput = false;
+
+                for (const track of tracks) {
                     const typeEl = track.querySelector('type');
                     const nameEl = track.querySelector('name');
-                    const activityType = typeEl ? typeEl.textContent.toLowerCase() : 'unknown';
+                    const explicitType = typeEl ? typeEl.textContent.toLowerCase() : null;
                     const trackName = nameEl ? nameEl.textContent : null;
 
                     // Skip stationary data
-                    if (activityType === 'stationary') return;
+                    if (explicitType === 'stationary') continue;
 
                     // Get all track segments
                     const segments = track.querySelectorAll('trkseg');
 
-                    segments.forEach(segment => {
+                    for (const segment of segments) {
                         const trackpoints = segment.querySelectorAll('trkpt');
-                        if (trackpoints.length < 2) return;
+                        if (trackpoints.length < 2) continue;
 
                         const path = [];
                         let startTime = null;
                         let endTime = null;
+                        let hasTimestamps = false;
 
                         trackpoints.forEach(trkpt => {
                             const lat = parseFloat(trkpt.getAttribute('lat'));
@@ -2198,6 +2524,7 @@
                                 const point = { lat, lng };
 
                                 if (timeEl) {
+                                    hasTimestamps = true;
                                     const timestamp = new Date(timeEl.textContent);
                                     point.timestamp = timestamp.toISOString();
                                     if (!startTime) startTime = timestamp;
@@ -2213,25 +2540,69 @@
                         });
 
                         if (path.length > 1) {
-                            // Use first point's timestamp if no explicit times
+                            // Calculate distance
+                            const distanceKm = calculateDistance(path) / 1000;
+
+                            // Determine activity type
+                            let activityType = explicitType;
+                            let inferredType = null;
+
+                            if (!activityType) {
+                                // Try to infer from speed if we have timestamps
+                                if (hasTimestamps && startTime && endTime) {
+                                    const durationHours = (endTime - startTime) / (1000 * 60 * 60);
+                                    if (durationHours > 0.001) { // At least a few seconds
+                                        const avgSpeedKmh = distanceKm / durationHours;
+                                        inferredType = inferActivityFromSpeed(avgSpeedKmh);
+                                        if (inferredType === 'stationary') continue;
+                                    }
+                                }
+                                // Mark that we need user input
+                                needsUserInput = true;
+                            }
+
+                            // Use current time if no explicit times
                             if (!startTime) {
                                 startTime = new Date();
                                 endTime = new Date();
                             }
 
-                            routes.push({
+                            const routeData = {
                                 date: startTime.toISOString().split('T')[0],
                                 startTime: startTime,
                                 endTime: endTime,
                                 path: path,
                                 activityType: activityType,
-                                distance: calculateDistance(path),
+                                inferredType: inferredType,
+                                distance: distanceKm * 1000, // Store in meters
                                 name: trackName,
                                 source: 'gpx'
-                            });
+                            };
+
+                            if (activityType) {
+                                routes.push(routeData);
+                            } else {
+                                pendingRoutes.push(routeData);
+                            }
                         }
+                    }
+                }
+
+                // If we have pending routes, ask user for activity type (once for all)
+                if (pendingRoutes.length > 0) {
+                    const firstRoute = pendingRoutes[0];
+                    const selectedType = await showActivityTypeDialog(
+                        firstRoute.name || (pendingRoutes.length > 1 ? `${pendingRoutes.length} routes` : null),
+                        firstRoute.inferredType
+                    );
+
+                    // Apply selected type to all pending routes
+                    pendingRoutes.forEach(route => {
+                        route.activityType = selectedType;
+                        delete route.inferredType;
+                        routes.push(route);
                     });
-                });
+                }
 
             } catch (error) {
                 console.error('Error parsing GPX file:', error);
@@ -2263,28 +2634,32 @@
                 label.style.alignItems = 'center';
                 label.style.gap = '5px';
                 label.style.padding = '5px 10px';
-                label.style.background = '#f8f9fa';
+                label.style.background = '#555';
                 label.style.borderRadius = '6px';
                 label.style.cursor = 'pointer';
                 label.style.fontSize = '0.85em';
                 label.style.border = '2px solid transparent';
-                
+                label.style.color = 'white';
+
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = activity;
                 checkbox.checked = selectedActivities.has(activity);
-                
+
                 if (!checkbox.checked) {
-                    label.style.borderColor = '#ddd';
+                    label.style.borderColor = '#777';
+                    label.style.opacity = '0.6';
                 }
-                
+
                 checkbox.addEventListener('change', () => {
                     if (checkbox.checked) {
                         selectedActivities.add(activity);
                         label.style.borderColor = 'transparent';
+                        label.style.opacity = '1';
                     } else {
                         selectedActivities.delete(activity);
-                        label.style.borderColor = '#ddd';
+                        label.style.borderColor = '#777';
+                        label.style.opacity = '0.6';
                     }
                     filterRoutes();
                 });
@@ -2750,11 +3125,21 @@
             updateStats();
             
             // Update map if open
-            if (map && mapModal.classList.contains('active')) {
-                if (photoMarkersMode) {
-                    showPhotoMarkers();
-                } else {
-                    showNumberMarkers();
+            if (mapModal.classList.contains('active')) {
+                if (is3DMode && map3d) {
+                    // Clear active photo marker if it was the deleted photo
+                    if (activePhotoMarker3d) {
+                        activePhotoMarker3d.remove();
+                        activePhotoMarker3d = null;
+                        activePhotoMarker3dData = null;
+                    }
+                    add3DMarkers();
+                } else if (map) {
+                    if (photoMarkersMode) {
+                        showPhotoMarkers();
+                    } else {
+                        showNumberMarkers();
+                    }
                 }
             }
         }
@@ -2779,7 +3164,7 @@
             
             // Show feedback
             const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#667eea;color:white;padding:10px 20px;border-radius:8px;z-index:10000;';
+            toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
             toast.textContent = `GPS + Date/Time copied from ${photo.name}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
@@ -2839,7 +3224,7 @@
             
             // Show feedback
             const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#28a745;color:white;padding:10px 20px;border-radius:8px;z-index:10000;';
+            toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
             toast.textContent = `GPS + Date/Time pasted to ${photo.name}`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 2000);
@@ -3101,7 +3486,7 @@
                     
                     // Show feedback
                     const toast = document.createElement('div');
-                    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#28a745;color:white;padding:10px 20px;border-radius:8px;z-index:10000;';
+                    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:8px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
                     toast.textContent = `Saved ${baseName}_gps.jpg with metadata`;
                     document.body.appendChild(toast);
                     setTimeout(() => toast.remove(), 3000);
@@ -3828,7 +4213,7 @@
             const numberMarkerSizeValue = document.getElementById('numberMarkerSizeValue');
 
             if (is3DMode) {
-                btn.textContent = '🗺️ 2D View';
+                btn.textContent = '2D';
                 btn.title = 'Switch back to 2D map view';
                 map2dContainer.style.display = 'none';
                 map3dContainer.style.display = 'block';
@@ -3857,7 +4242,7 @@
 
                 init3DMap();
             } else {
-                btn.textContent = '🏔️ 3D View';
+                btn.textContent = '3D';
                 btn.title = 'Toggle 3D terrain view (requires Mapbox API key)';
                 map2dContainer.style.display = 'block';
                 map3dContainer.style.display = 'none';
@@ -3936,7 +4321,8 @@
                     zoom: zoom,
                     pitch: pitch,
                     bearing: bearing,
-                    antialias: true
+                    antialias: true,
+                    preserveDrawingBuffer: true  // Required for canvas export (Save as JPEG)
                 });
 
                 map3d.on('style.load', () => {
@@ -3991,6 +4377,77 @@
             }
         }
 
+        function resetView() {
+            // Calculate bounds from marker positions (not GPS) and visible routes
+            const photosWithGPS = photos.filter(p => p.gps && p.gps.hasGPS);
+
+            // Check if we have any visible content
+            const hasVisibleRoutes = routes.some(route =>
+                selectedActivities.has(route.activityType)
+            );
+
+            if (photosWithGPS.length === 0 && !hasVisibleRoutes) {
+                // No data to show
+                return;
+            }
+
+            // Build bounds from marker positions (may be offset from GPS)
+            let minLng = Infinity, minLat = Infinity;
+            let maxLng = -Infinity, maxLat = -Infinity;
+
+            photosWithGPS.forEach((photo, idx) => {
+                // Use marker offset position if available, otherwise use GPS
+                const originalIndex = photos.indexOf(photo);
+                const offset = photoMarkerOffsets[originalIndex];
+                const lat = offset ? offset.lat : photo.gps.latitude;
+                const lng = offset ? offset.lng : photo.gps.longitude;
+
+                minLng = Math.min(minLng, lng);
+                maxLng = Math.max(maxLng, lng);
+                minLat = Math.min(minLat, lat);
+                maxLat = Math.max(maxLat, lat);
+            });
+
+            // Only include visible routes (filtered by selectedActivities)
+            routes.forEach(route => {
+                // Skip if activity type is filtered out
+                if (!selectedActivities.has(route.activityType)) {
+                    return;
+                }
+                route.path.forEach(point => {
+                    minLng = Math.min(minLng, point.lng);
+                    maxLng = Math.max(maxLng, point.lng);
+                    minLat = Math.min(minLat, point.lat);
+                    maxLat = Math.max(maxLat, point.lat);
+                });
+            });
+
+            // Handle case where we have no valid bounds
+            if (minLng === Infinity) {
+                return;
+            }
+
+            if (is3DMode && map3d) {
+                // 3D mode - fit with extra top padding for balloons
+                map3d.fitBounds(
+                    [[minLng, minLat], [maxLng, maxLat]],
+                    {
+                        padding: { top: 150, bottom: 50, left: 50, right: 50 },
+                        pitch: 60,
+                        bearing: 0,
+                        duration: 1500
+                    }
+                );
+            } else if (map) {
+                // 2D mode - use Leaflet fitBounds
+                const bounds = L.latLngBounds(
+                    [minLat, minLng],
+                    [maxLat, maxLng]
+                );
+                map.flyToBounds(bounds.pad(0.1), { duration: 1.5 });
+            }
+        }
+
         function add3DRoutes() {
             if (!map3d) {
                 console.log('add3DRoutes: map3d not initialized');
@@ -4011,8 +4468,8 @@
 
             // Build GeoJSON from routes
             const features = routes.map((route, index) => {
-                // Check if this activity type is selected
-                if (selectedActivities.size > 0 && !selectedActivities.has(route.activityType)) {
+                // Check if this activity type is selected (hide if not selected)
+                if (!selectedActivities.has(route.activityType)) {
                     return null;
                 }
 
@@ -4351,11 +4808,14 @@
         function setup3DDepthSorting() {
             if (!map3d) return;
 
+            // Throttled update for performance (runs at most every 50ms during camera movement)
+            const throttledDepthUpdate = throttle(update3DMarkerDepths, 50);
+
             // Update on camera movement
-            map3d.on('move', update3DMarkerDepths);
-            map3d.on('zoom', update3DMarkerDepths);
-            map3d.on('pitch', update3DMarkerDepths);
-            map3d.on('rotate', update3DMarkerDepths);
+            map3d.on('move', throttledDepthUpdate);
+            map3d.on('zoom', throttledDepthUpdate);
+            map3d.on('pitch', throttledDepthUpdate);
+            map3d.on('rotate', throttledDepthUpdate);
 
             // Initial update
             update3DMarkerDepths();
@@ -4375,7 +4835,7 @@
 
             // Temporarily reset photo markers mode while rebuilding
             photoMarkersMode = false;
-            document.getElementById('photoMarkersBtn').textContent = '📷 Photo Markers';
+            document.getElementById('photoMarkersBtn').textContent = 'Photo Markers';
             document.getElementById('mapSliderOverlay').style.display = 'none';
             document.getElementById('markerSizeControl').style.display = 'none';
             document.getElementById('numberMarkerSizeControl').style.display = 'none';
@@ -4879,7 +5339,7 @@
             const sliderOverlay = document.getElementById('mapSliderOverlay');
 
             if (photoMarkersMode) {
-                btn.textContent = '🔢 Number Markers';
+                btn.textContent = 'Number Markers';
                 sliderOverlay.style.display = 'flex';
                 // Position slider overlay based on view mode (3D controls on right, 2D on left)
                 sliderOverlay.style.left = is3DMode ? '10px' : '50px';
@@ -4894,7 +5354,7 @@
                     showPhotoMarkers();
                 }
             } else {
-                btn.textContent = '📷 Photo Markers';
+                btn.textContent = 'Photo Markers';
                 sliderOverlay.style.display = 'none';
                 photoSizeControl.style.display = 'none';
                 numberSizeControl.style.display = 'none';
@@ -5070,6 +5530,8 @@
             if (photo.src) {
                 const img = document.createElement('img');
                 img.className = 'photo-marker-img';
+                img.loading = 'lazy'; // Lazy load for performance
+                img.decoding = 'async'; // Async decode for smoother rendering
                 img.src = photo.src;
 
                 // Pan/zoom state
@@ -5506,11 +5968,18 @@
                 }
             });
 
-            // Mousedown handler - Option/Alt key determines behavior
-            // Default: pan image, Alt held: drag marker
+            // Disable context menu on photo markers (right-click is used for dragging)
+            element.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
+            // Mousedown handler - Option/Alt key OR right-click determines behavior
+            // Default: pan image, Alt held OR right-click: drag marker
             element.addEventListener('mousedown', (e) => {
-                if (e.altKey) {
-                    // Option key held: drag the entire marker
+                const isMarkerDragAction = e.altKey || e.button === 2;
+
+                if (isMarkerDragAction) {
+                    // Option key held OR right-click: drag the entire marker
                     isMarkerDragging = true;
                     markerDragStartLatLng = leafletMarker.getLatLng();
                     startX = e.clientX;
@@ -5532,8 +6001,8 @@
                     map.dragging.disable();
                     e.preventDefault();
                     e.stopPropagation();
-                } else {
-                    // No Option key: pan image within the circle
+                } else if (e.button === 0) {
+                    // Left-click without Option key: pan image within the circle
                     startX = e.clientX;
                     startY = e.clientY;
                     initialX = posX;
@@ -5639,7 +6108,7 @@
                 // Convert pixel distance to approximate lat/lng offset
                 const zoom = map.getZoom();
                 const metersPerPixel = 156543.03392 * Math.cos(center.lat * Math.PI / 180) / Math.pow(2, zoom);
-                const spiderDistance = PHOTO_MARKER_SIZE * 0.8; // Scale with marker size
+                const spiderDistance = PHOTO_MARKER_SIZE * 0.8 * SPIDER_SPREAD; // Scale with marker size and spread
                 const offsetMeters = spiderDistance * metersPerPixel;
                 
                 // Rough conversion (1 degree latitude ≈ 111,000 meters)
@@ -5981,7 +6450,7 @@
                 
                 if (saveBtn) {
                     saveBtn.disabled = false;
-                    saveBtn.textContent = prevBtnText || '💾 Save as JPEG';
+                    saveBtn.textContent = prevBtnText || 'Save as JPEG';
                 }
             }
         }
@@ -6140,6 +6609,14 @@
                     if (zoomControls) { restore.zoomDisplay = zoomControls.style.display; zoomControls.style.display = 'none'; }
                     if (attribControls) { restore.attribDisplay = attribControls.style.display; attribControls.style.display = 'none'; }
 
+                    // Hide slider controls during save
+                    const markerSizeCtrl = document.getElementById('markerSizeControl');
+                    const numberSizeCtrl = document.getElementById('numberMarkerSizeControl');
+                    const spiderSpreadCtrl = document.getElementById('spiderSpreadControl');
+                    if (markerSizeCtrl) { restore.markerSizeDisplay = markerSizeCtrl.style.display; markerSizeCtrl.style.display = 'none'; }
+                    if (numberSizeCtrl) { restore.numberSizeDisplay = numberSizeCtrl.style.display; numberSizeCtrl.style.display = 'none'; }
+                    if (spiderSpreadCtrl) { restore.spiderSpreadDisplay = spiderSpreadCtrl.style.display; spiderSpreadCtrl.style.display = 'none'; }
+
                     // Convert blob URLs to data URLs for photo markers (fixes CORS/tainted canvas issues)
                     restorePhotoMarkers = await convertPhotoMarkersToDataUrls(mapContainer);
                     await sleep(200);
@@ -6175,6 +6652,14 @@
                 if (zoomControls) zoomControls.style.display = restore.zoomDisplay ?? '';
                 if (attribControls) attribControls.style.display = restore.attribDisplay ?? '';
 
+                // Restore slider controls
+                const markerSizeCtrl = document.getElementById('markerSizeControl');
+                const numberSizeCtrl = document.getElementById('numberMarkerSizeControl');
+                const spiderSpreadCtrl = document.getElementById('spiderSpreadControl');
+                if (markerSizeCtrl) markerSizeCtrl.style.display = restore.markerSizeDisplay ?? '';
+                if (numberSizeCtrl) numberSizeCtrl.style.display = restore.numberSizeDisplay ?? '';
+                if (spiderSpreadCtrl) spiderSpreadCtrl.style.display = restore.spiderSpreadDisplay ?? '';
+
                 if (typeof monitorMapResize === 'function') monitorMapResize();
                 if (map) {
                     try { map.invalidateSize({ animate: false }); } catch { map.invalidateSize(); }
@@ -6203,6 +6688,7 @@
 
             // Get the Mapbox canvas
             const mapCanvas = map3d.getCanvas();
+            const pixelRatio = window.devicePixelRatio || 1;
 
             // Create a new canvas to composite map + markers
             const canvas = document.createElement('canvas');
@@ -6213,55 +6699,25 @@
             // Draw the map canvas
             ctx.drawImage(mapCanvas, 0, 0);
 
-            // Get all marker elements and draw them onto the canvas
+            // Get map container for position calculations
             const map3dContainer = document.getElementById('map3d');
-            const markerElements = map3dContainer.querySelectorAll('.mapboxgl-marker');
+            const containerRect = map3dContainer.getBoundingClientRect();
 
-            for (const markerEl of markerElements) {
-                try {
-                    // Get marker position on screen
-                    const rect = markerEl.getBoundingClientRect();
-                    const containerRect = map3dContainer.getBoundingClientRect();
+            // Draw number markers (from markers3d array)
+            for (const marker of markers3d) {
+                const el = marker.getElement();
+                if (!el || el.style.display === 'none') continue;
 
-                    // Calculate position relative to map container, accounting for canvas pixel ratio
-                    const pixelRatio = window.devicePixelRatio || 1;
-                    const x = (rect.left - containerRect.left) * pixelRatio;
-                    const y = (rect.top - containerRect.top) * pixelRatio;
-                    const width = rect.width * pixelRatio;
-                    const height = rect.height * pixelRatio;
+                const markerDiv = el.classList.contains('marker-3d') ? el : el.querySelector('.marker-3d');
+                if (!markerDiv) continue;
 
-                    // Use html2canvas-style rendering for the marker
-                    await drawMarkerToCanvas(ctx, markerEl, x, y, width, height, pixelRatio);
-                } catch (err) {
-                    console.warn('Failed to draw marker:', err);
-                }
-            }
-
-            // Convert canvas to JPEG data URL
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-            // Download
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = `${baseName}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        // Draw a marker element to canvas (simplified rendering)
-        async function drawMarkerToCanvas(ctx, markerEl, x, y, width, height, pixelRatio) {
-            // For numbered markers (circles with numbers)
-            const innerDiv = markerEl.querySelector('.marker-3d');
-            if (innerDiv) {
-                const style = window.getComputedStyle(innerDiv);
-                const size = parseFloat(style.width) * pixelRatio;
-
-                // Draw circle background
-                ctx.save();
-                const centerX = x + width / 2;
-                const centerY = y + height / 2;
+                const rect = markerDiv.getBoundingClientRect();
+                const size = rect.width * pixelRatio;
+                const centerX = (rect.left - containerRect.left + rect.width / 2) * pixelRatio;
+                const centerY = (rect.top - containerRect.top + rect.height / 2) * pixelRatio;
                 const radius = size / 2;
+
+                ctx.save();
 
                 // Gradient background
                 const gradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
@@ -6279,7 +6735,7 @@
                 ctx.stroke();
 
                 // Number text
-                const number = innerDiv.textContent;
+                const number = markerDiv.textContent;
                 ctx.fillStyle = 'white';
                 ctx.font = `bold ${size * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
                 ctx.textAlign = 'center';
@@ -6287,179 +6743,256 @@
                 ctx.fillText(number, centerX, centerY);
 
                 ctx.restore();
-                return;
             }
 
-            // For photo balloon markers - draw simplified version
-            const photoPopup = markerEl.querySelector('.marker-3d-photo-popup');
-            if (photoPopup) {
-                const img = photoPopup.querySelector('img');
-                if (img && img.complete) {
-                    ctx.save();
-
-                    // Get photo circle dimensions
-                    const photoCircle = photoPopup.querySelector('div[style*="border-radius: 50%"]');
-                    if (photoCircle) {
-                        const circleStyle = window.getComputedStyle(photoCircle);
-                        const circleSize = parseFloat(circleStyle.width) * pixelRatio;
-                        const circleX = x;
-                        const circleY = y;
-
-                        // Draw the string first
-                        const stringEl = photoPopup.querySelector('div[style*="width: 3px"]');
-                        if (stringEl) {
-                            const stringStyle = window.getComputedStyle(stringEl);
-                            const stringHeight = parseFloat(stringStyle.height) * pixelRatio;
-                            const stringX = x + width / 2;
-                            const stringY = y + circleSize;
-
-                            const stringGradient = ctx.createLinearGradient(stringX, stringY, stringX, stringY + stringHeight);
-                            stringGradient.addColorStop(0, 'rgba(102, 126, 234, 0.9)');
-                            stringGradient.addColorStop(1, 'rgba(118, 75, 162, 0.9)');
-
-                            ctx.fillStyle = stringGradient;
-                            ctx.fillRect(stringX - 1.5 * pixelRatio, stringY, 3 * pixelRatio, stringHeight);
-                        }
-
-                        // Clip to circle for the photo
-                        ctx.beginPath();
-                        ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2 - 3 * pixelRatio, 0, Math.PI * 2);
-                        ctx.clip();
-
-                        // Draw the image
-                        ctx.drawImage(img, circleX, circleY, circleSize, circleSize);
-
-                        ctx.restore();
-                        ctx.save();
-
-                        // Draw circle border
-                        ctx.beginPath();
-                        ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2, 0, Math.PI * 2);
-                        ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 3 * pixelRatio;
-                        ctx.stroke();
-
-                        // Draw badge
-                        const badge = photoPopup.querySelector('div[style*="border-radius: 50%"][style*="gradient"]');
-                        if (badge) {
-                            const badgeStyle = window.getComputedStyle(badge);
-                            const badgeSize = parseFloat(badgeStyle.width) * pixelRatio;
-                            const badgeX = circleX + circleSize - badgeSize * 0.7;
-                            const badgeY = circleY - badgeSize * 0.3;
-
-                            const badgeGradient = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
-                            badgeGradient.addColorStop(0, '#667eea');
-                            badgeGradient.addColorStop(1, '#764ba2');
-
-                            ctx.beginPath();
-                            ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2);
-                            ctx.fillStyle = badgeGradient;
-                            ctx.fill();
-                            ctx.strokeStyle = 'white';
-                            ctx.lineWidth = 2 * pixelRatio;
-                            ctx.stroke();
-
-                            // Badge number
-                            const badgeNum = badge.textContent;
-                            ctx.fillStyle = 'white';
-                            ctx.font = `bold ${badgeSize * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            ctx.fillText(badgeNum, badgeX + badgeSize / 2, badgeY + badgeSize / 2);
-                        }
+            // Draw photo balloon marker if visible
+            if (activePhotoMarker3d) {
+                const el = activePhotoMarker3d.getElement();
+                if (el && el.style.display !== 'none') {
+                    const popup = el.classList.contains('marker-3d-photo-popup') ? el : el.querySelector('.marker-3d-photo-popup');
+                    if (popup) {
+                        await draw3DPhotoPopupToCanvas(ctx, popup, containerRect, pixelRatio);
                     }
-
-                    ctx.restore();
                 }
+            }
+
+            // Convert canvas to JPEG data URL
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+            // Download
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `${baseName}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Draw 3D photo popup (balloon with string) to canvas
+        async function draw3DPhotoPopupToCanvas(ctx, popup, containerRect, pixelRatio) {
+            // Find the photo circle (first div with border-radius: 50% inside animWrapper)
+            const animWrapper = popup.firstElementChild;
+            if (!animWrapper) return;
+
+            const photoCircle = animWrapper.querySelector('div');
+            if (!photoCircle) return;
+
+            const circleRect = photoCircle.getBoundingClientRect();
+            const circleSize = circleRect.width * pixelRatio;
+            const circleX = (circleRect.left - containerRect.left) * pixelRatio;
+            const circleY = (circleRect.top - containerRect.top) * pixelRatio;
+
+            // Find and draw the string
+            const stringEl = animWrapper.querySelector('div[style*="width: 3px"]');
+            if (stringEl) {
+                const stringRect = stringEl.getBoundingClientRect();
+                const stringX = (stringRect.left - containerRect.left + stringRect.width / 2) * pixelRatio;
+                const stringY = (stringRect.top - containerRect.top) * pixelRatio;
+                const stringHeight = stringRect.height * pixelRatio;
+                const stringWidth = 3 * pixelRatio;
+
+                ctx.save();
+                const stringGradient = ctx.createLinearGradient(stringX, stringY, stringX, stringY + stringHeight);
+                stringGradient.addColorStop(0, 'rgba(102, 126, 234, 0.9)');
+                stringGradient.addColorStop(1, 'rgba(118, 75, 162, 0.9)');
+                ctx.fillStyle = stringGradient;
+                ctx.fillRect(stringX - stringWidth / 2, stringY, stringWidth, stringHeight);
+
+                // White outline for string
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2 * pixelRatio;
+                ctx.strokeRect(stringX - stringWidth / 2, stringY, stringWidth, stringHeight);
+                ctx.restore();
+            }
+
+            // Draw the photo circle
+            const img = photoCircle.querySelector('img');
+            if (img && img.complete) {
+                ctx.save();
+
+                // Clip to circle for the photo
+                ctx.beginPath();
+                ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2 - 3 * pixelRatio, 0, Math.PI * 2);
+                ctx.clip();
+
+                // Draw the image - handle transform if present
+                const imgStyle = img.style.transform;
+                if (imgStyle && imgStyle.includes('translate')) {
+                    // Has custom transform from 2D editing
+                    const translateMatch = imgStyle.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);
+                    const scaleMatch = imgStyle.match(/scale\(([-\d.]+)\)/);
+                    const tx = translateMatch ? parseFloat(translateMatch[1]) * pixelRatio : 0;
+                    const ty = translateMatch ? parseFloat(translateMatch[2]) * pixelRatio : 0;
+                    const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
+
+                    ctx.drawImage(img, circleX + tx, circleY + ty, img.naturalWidth * scale * pixelRatio, img.naturalHeight * scale * pixelRatio);
+                } else {
+                    // Default cover fit
+                    ctx.drawImage(img, circleX, circleY, circleSize, circleSize);
+                }
+
+                ctx.restore();
+
+                // Draw circle border
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(circleX + circleSize / 2, circleY + circleSize / 2, circleSize / 2, 0, Math.PI * 2);
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 3 * pixelRatio;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Draw the number badge
+            const badge = animWrapper.querySelector('div[style*="gradient"]');
+            if (badge && badge !== photoCircle) {
+                const badgeRect = badge.getBoundingClientRect();
+                const badgeSize = badgeRect.width * pixelRatio;
+                const badgeX = (badgeRect.left - containerRect.left) * pixelRatio;
+                const badgeY = (badgeRect.top - containerRect.top) * pixelRatio;
+
+                ctx.save();
+                const badgeGradient = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeSize, badgeY + badgeSize);
+                badgeGradient.addColorStop(0, '#667eea');
+                badgeGradient.addColorStop(1, '#764ba2');
+
+                ctx.beginPath();
+                ctx.arc(badgeX + badgeSize / 2, badgeY + badgeSize / 2, badgeSize / 2, 0, Math.PI * 2);
+                ctx.fillStyle = badgeGradient;
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2 * pixelRatio;
+                ctx.stroke();
+
+                // Badge number
+                const badgeNum = badge.textContent;
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${badgeSize * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(badgeNum, badgeX + badgeSize / 2, badgeY + badgeSize / 2);
+                ctx.restore();
             }
         }
 
         function clearAll() {
             if (photos.length === 0 && routes.length === 0) return;
-            
-            if (confirm('Clear all photos and routes?')) {
-                // Close any open popups
-                closeAllPhotoPopups();
-                
-                // Revoke object URLs to free memory
-                photos.forEach(photo => {
-                    if (photo.src) {
-                        URL.revokeObjectURL(photo.src);
+
+            // Use double-click or shift-click for instant clear, otherwise show confirmation
+            if (event && (event.detail === 2 || event.shiftKey)) {
+                performClearAll();
+                return;
+            }
+
+            // Show confirmation by changing button text temporarily
+            const btn = document.getElementById('clearButton');
+            if (btn.dataset.confirming === 'true') {
+                // Second click - perform the clear
+                btn.dataset.confirming = 'false';
+                btn.textContent = 'Clear All';
+                performClearAll();
+            } else {
+                // First click - ask for confirmation
+                btn.dataset.confirming = 'true';
+                btn.textContent = 'Confirm?';
+                // Reset after 3 seconds if not confirmed
+                setTimeout(() => {
+                    if (btn.dataset.confirming === 'true') {
+                        btn.dataset.confirming = 'false';
+                        btn.textContent = 'Clear All';
                     }
-                });
-                
-                // Reset data arrays
-                photos = [];
-                routes = [];
-                selectedActivities.clear();
-                photosWithUnsavedEdits.clear();
-                highlightedPhotoName = null;
-                copiedGPS = null;
-                photoMarkerTransforms = {};
-                badgeOrbitalAngles = {};
-                photoMarkerOffsets = {};
-                userHasInteractedWithMap = false;
-                savedMapState = null;
-
-                // Reset UI
-                photosGrid.innerHTML = '';
-                stats.style.display = 'none';
-                errorContainer.innerHTML = '';
-                document.getElementById('dateRangeStats').style.display = 'none';
-                document.getElementById('routeStats').style.display = 'none';
-                document.getElementById('routeFilterContainer').style.display = 'none';
-                document.getElementById('activityCheckboxes').innerHTML = '';
-                
-                // Reset file inputs
-                fileInput.value = '';
-                routeInput.value = '';
-
-                // Disable buttons
-                showMapButton.disabled = true;
-                showGalleryButton.disabled = true;
-                
-                // Clear map if it exists
-                if (map) {
-                    markers.forEach(marker => map.removeLayer(marker));
-                    markers = [];
-                    clearPhotoMarkers();
-                    resetPhotoMarkerTransforms();
-                    routePolylines.forEach(poly => {
-                        poly.border.remove();
-                        poly.line.remove();
-                    });
-                    routePolylines = [];
-                }
-                
-                // Close modals
-                mapModal.classList.remove('active');
-                galleryModal.classList.remove('active');
+                }, 3000);
             }
         }
 
-        function showError(message, type = 'error') {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.style.whiteSpace = 'pre-wrap';
-            
-            if (type === 'success') {
-                errorDiv.style.background = '#d4edda';
-                errorDiv.style.color = '#155724';
-                errorDiv.style.borderLeftColor = '#28a745';
-            } else if (type === 'warning') {
-                errorDiv.style.background = '#fff3cd';
-                errorDiv.style.color = '#856404';
-                errorDiv.style.borderLeftColor = '#ffc107';
+        function performClearAll() {
+            // Close any open popups
+            closeAllPhotoPopups();
+
+            // Revoke object URLs to free memory
+            photos.forEach(photo => {
+                if (photo.src) {
+                    URL.revokeObjectURL(photo.src);
+                }
+            });
+
+            // Reset data arrays
+            photos = [];
+            routes = [];
+            selectedActivities.clear();
+            photosWithUnsavedEdits.clear();
+            highlightedPhotoName = null;
+            copiedGPS = null;
+            photoMarkerTransforms = {};
+            badgeOrbitalAngles = {};
+            photoMarkerOffsets = {};
+            userHasInteractedWithMap = false;
+            savedMapState = null;
+
+            // Reset UI
+            photosGrid.innerHTML = '';
+            stats.style.display = 'none';
+            clearStatus();
+            document.getElementById('dateRangeStats').style.display = 'none';
+            document.getElementById('routeStats').style.display = 'none';
+            document.getElementById('routeFilterContainer').style.display = 'none';
+            document.getElementById('activityCheckboxes').innerHTML = '';
+
+            // Reset file inputs
+            fileInput.value = '';
+            routeInput.value = '';
+
+            // Disable buttons
+            showMapButton.disabled = true;
+            showGalleryButton.disabled = true;
+            clearButton.disabled = true;
+
+            // Clear map if it exists
+            if (map) {
+                markers.forEach(marker => map.removeLayer(marker));
+                markers = [];
+                clearPhotoMarkers();
+                resetPhotoMarkerTransforms();
+                routePolylines.forEach(poly => {
+                    poly.border.remove();
+                    poly.line.remove();
+                });
+                routePolylines = [];
             }
-            
-            errorDiv.textContent = message;
-            errorContainer.appendChild(errorDiv);
-            
-            // Longer timeout for warnings/errors with more info
-            const timeout = type === 'success' ? 4000 : 8000;
-            setTimeout(() => {
-                errorDiv.remove();
-            }, timeout);
+
+            // Close modals
+            mapModal.classList.remove('active');
+            galleryModal.classList.remove('active');
+        }
+
+        let statusTimeout = null;
+
+        function setStatus(message, duration = 0) {
+            if (statusTimeout) {
+                clearTimeout(statusTimeout);
+                statusTimeout = null;
+            }
+            statusLine.textContent = message;
+            if (duration > 0) {
+                statusTimeout = setTimeout(() => {
+                    statusLine.textContent = '';
+                    statusTimeout = null;
+                }, duration);
+            }
+        }
+
+        function clearStatus() {
+            if (statusTimeout) {
+                clearTimeout(statusTimeout);
+                statusTimeout = null;
+            }
+            statusLine.textContent = '';
+        }
+
+        // Legacy wrapper for compatibility
+        function showError(message, type = 'error') {
+            const duration = type === 'success' ? 4000 : 6000;
+            setStatus(message, duration);
         }
 
         // Close map with Escape key
