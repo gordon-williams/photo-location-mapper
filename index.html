@@ -2269,8 +2269,11 @@
 
             setStatus(`Loading ${file.name}...`);
 
+            // Clear existing routes before loading new ones
+            routes = [];
+            selectedActivities.clear();
+
             try {
-                const routesBefore = routes.length;
 
                 // Auto-detect format based on file extension
                 const fileName = file.name.toLowerCase();
@@ -2289,12 +2292,10 @@
                     }
                 }
 
-                const routesAdded = routes.length - routesBefore;
-
-                if (routesAdded === 0) {
+                if (routes.length === 0) {
                     setStatus(`No routes found in ${file.name}`, 4000);
                 } else {
-                    setStatus(`Loaded ${routesAdded} route${routesAdded !== 1 ? 's' : ''} from ${file.name}`, 3000);
+                    setStatus(`Loaded ${routes.length} route${routes.length !== 1 ? 's' : ''} from ${file.name}`, 3000);
                 }
 
             } catch (error) {
@@ -7142,7 +7143,7 @@
                     map.invalidateSize({ animate: false });
                     await sleep(100);
 
-                    const dataUrl = await window.domtoimage.toJpeg(mapContainer, {
+                    const mapDataUrl = await window.domtoimage.toJpeg(mapContainer, {
                         quality: 0.92,
                         filter: (node) => {
                             if (node.classList && (
@@ -7154,7 +7155,49 @@
                         }
                     });
 
-                    downloadDataUrl(dataUrl, baseName);
+                    // Check if elevation panel is visible and include it
+                    const elevationPanel = document.getElementById('elevationPanel');
+                    const elevationCanvas = document.getElementById('elevationCanvas');
+
+                    if (elevationPanelVisible && elevationPanel && elevationCanvas) {
+                        // Composite map + elevation panel
+                        const mapImg = new Image();
+                        await new Promise((resolve, reject) => {
+                            mapImg.onload = resolve;
+                            mapImg.onerror = reject;
+                            mapImg.src = mapDataUrl;
+                        });
+
+                        const panelRect = elevationPanel.getBoundingClientRect();
+                        const elevRect = elevationCanvas.getBoundingClientRect();
+
+                        // Create composite canvas
+                        const compositeCanvas = document.createElement('canvas');
+                        compositeCanvas.width = mapImg.width;
+                        compositeCanvas.height = mapImg.height + panelRect.height;
+                        const ctx = compositeCanvas.getContext('2d');
+
+                        // Draw map
+                        ctx.drawImage(mapImg, 0, 0);
+
+                        // Draw elevation panel background
+                        ctx.fillStyle = '#222';
+                        ctx.fillRect(0, mapImg.height, compositeCanvas.width, panelRect.height);
+
+                        // Draw elevation chart - scale to match
+                        const scaleX = mapImg.width / mapContainer.offsetWidth;
+                        const elevX = (elevRect.left - panelRect.left) * scaleX;
+                        const elevY = mapImg.height + (elevRect.top - panelRect.top) * scaleX;
+                        const elevW = elevRect.width * scaleX;
+                        const elevH = elevRect.height * scaleX;
+
+                        ctx.drawImage(elevationCanvas, elevX, elevY, elevW, elevH);
+
+                        const dataUrl = compositeCanvas.toDataURL('image/jpeg', 0.92);
+                        downloadDataUrl(dataUrl, baseName);
+                    } else {
+                        downloadDataUrl(mapDataUrl, baseName);
+                    }
                 }
 
             } catch (err) {
@@ -7292,8 +7335,39 @@
                 }
             }
 
+            // Check if elevation panel is visible and include it
+            const elevationPanel = document.getElementById('elevationPanel');
+            const elevationCanvas = document.getElementById('elevationCanvas');
+            let finalCanvas = canvas;
+
+            if (elevationPanelVisible && elevationPanel && elevationCanvas) {
+                const panelRect = elevationPanel.getBoundingClientRect();
+                const panelHeight = panelRect.height * pixelRatio;
+
+                // Create a new canvas that includes both map and elevation
+                finalCanvas = document.createElement('canvas');
+                finalCanvas.width = canvas.width;
+                finalCanvas.height = canvas.height + panelHeight;
+                const finalCtx = finalCanvas.getContext('2d');
+
+                // Draw the map canvas at the top
+                finalCtx.drawImage(canvas, 0, 0);
+
+                // Draw the elevation panel background
+                finalCtx.fillStyle = '#222';
+                finalCtx.fillRect(0, canvas.height, finalCanvas.width, panelHeight);
+
+                // Draw the elevation chart canvas
+                // The elevation canvas is scaled by devicePixelRatio internally
+                const elevRect = elevationCanvas.getBoundingClientRect();
+                const elevX = (elevRect.left - panelRect.left) * pixelRatio;
+                const elevY = canvas.height + (elevRect.top - panelRect.top) * pixelRatio;
+
+                finalCtx.drawImage(elevationCanvas, elevX, elevY, elevationCanvas.width, elevationCanvas.height);
+            }
+
             // Convert canvas to JPEG data URL
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+            const dataUrl = finalCanvas.toDataURL('image/jpeg', 0.92);
 
             // Download
             const a = document.createElement('a');
