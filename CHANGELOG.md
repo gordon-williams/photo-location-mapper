@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2026-01-25 (Build 90)
+## [1.1.0] - 2026-01-25 (Build 92)
 
 ### Added
 - 3D terrain view with Mapbox GL JS
@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Atmospheric sky rendering in 3D view
 - View synchronization between 2D and 3D modes
 - Independent size controls for 2D and 3D views
-- 3D map style selector (Satellite Streets, Satellite, Outdoors with contours, Streets)
+- 3D map style selector (Standard with 3D Buildings, Satellite Streets, Satellite, Outdoors, Streets)
+- Mapbox Standard style with enhanced 3D buildings
+- 3D building extrusions for Streets style (zoom 15+)
 - Slider controls overlay on map for better UI layout
 - Right-click drag to move photo markers (alternative to Alt+drag)
 - Spread slider now works in 2D view for spider cluster distance

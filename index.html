@@ -4184,6 +4184,7 @@
 
         // 3D map style options
         const map3DStyleOptions = `
+            <option value="standard">Standard (3D Buildings)</option>
             <option value="satellite-streets-v12">Satellite Streets</option>
             <option value="satellite-v9">Satellite</option>
             <option value="outdoors-v12">Outdoors (with contours)</option>
@@ -4338,8 +4339,8 @@
 
                     map3d.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
 
-                    // Add sky
-                    if (!map3d.getLayer('sky')) {
+                    // Add sky (not for Standard style which has its own lighting)
+                    if (!map3d.getLayer('sky') && current3DStyle !== 'standard') {
                         map3d.addLayer({
                             id: 'sky',
                             type: 'sky',
@@ -4349,6 +4350,29 @@
                                 'sky-atmosphere-sun-intensity': 15
                             }
                         });
+                    }
+
+                    // Add 3D buildings for streets style (Standard has them built-in)
+                    if (current3DStyle === 'streets-v12' && !map3d.getLayer('3d-buildings')) {
+                        const layers = map3d.getStyle().layers;
+                        const labelLayerId = layers.find(
+                            (layer) => layer.type === 'symbol' && layer.layout['text-field']
+                        )?.id;
+
+                        map3d.addLayer({
+                            id: '3d-buildings',
+                            source: 'composite',
+                            'source-layer': 'building',
+                            filter: ['==', 'extrude', 'true'],
+                            type: 'fill-extrusion',
+                            minzoom: 15,
+                            paint: {
+                                'fill-extrusion-color': '#aaa',
+                                'fill-extrusion-height': ['get', 'height'],
+                                'fill-extrusion-base': ['get', 'min_height'],
+                                'fill-extrusion-opacity': 0.6
+                            }
+                        }, labelLayerId);
                     }
 
                     // Add routes and markers after a short delay to ensure style is fully ready
@@ -4857,11 +4881,18 @@
                 map.routeRenderer = L.canvas({ pane: 'shadowPane' });
                 map.rubberbandRenderer = L.canvas({ pane: 'rubberbandPane' });
 
-                const defaultStyle = mapStyles['humanitarian'];
-                currentTileLayer = L.tileLayer(defaultStyle.url, {
+                // Default to Mapbox Streets if API key is available, otherwise humanitarian
+                const defaultStyleKey = mapboxApiKey ? 'mapbox-streets' : 'humanitarian';
+                const defaultStyle = mapStyles[defaultStyleKey];
+                let tileUrl = defaultStyle.url;
+                if (mapboxApiKey && defaultStyle.requiresKey) {
+                    tileUrl = tileUrl.replace('{accessToken}', mapboxApiKey);
+                }
+                currentTileLayer = L.tileLayer(tileUrl, {
                     attribution: defaultStyle.attribution,
                     maxZoom: 19
                 }).addTo(map);
+                mapStyleSelect.value = defaultStyleKey;
 
                 // Update spider positions on zoom
                 map.on('zoomend', () => {
