@@ -1,0 +1,2249 @@
+<!--
+    Photo Location Mapper - Mobile Version
+    Copyright (c) 2026 Gordon Williams
+
+    Licensed under the MIT License.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+    https://github.com/gordon-williams/photo-location-mapper
+
+    ============================================================================
+    Third-Party Libraries
+    ============================================================================
+
+    Leaflet v1.9.4
+    Copyright (c) 2010-2024, Volodymyr Agafonkin
+    Licensed under BSD-2-Clause License
+    https://leafletjs.com/
+
+    Leaflet.markercluster v1.5.3
+    Copyright (c) 2012-2017, Dave Leaver, smartrak
+    Licensed under MIT License
+    https://github.com/Leaflet/Leaflet.markercluster
+
+    ExifReader v4.21.1
+    Copyright (c) 2012-2024, Mattias Wallander
+    Licensed under MPL-2.0 License
+    https://github.com/mattiasw/ExifReader
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Photo Location Mapper</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exifreader@4.21.1/dist/exif-reader.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        /* Main app container - full screen */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            height: 100dvh; /* Dynamic viewport height for mobile */
+        }
+
+        /* Top header bar */
+        .header {
+            background: #000;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .header-btn:active {
+            opacity: 0.5;
+        }
+
+        /* Main content area */
+        .content {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* View states */
+        .view {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .view.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Photos view */
+        #photosView .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            padding: 2px;
+        }
+
+        .photo-thumb {
+            aspect-ratio: 1;
+            overflow: hidden;
+            position: relative;
+            background: #333;
+        }
+
+        .photo-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-thumb .gps-badge {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .photo-thumb .gps-badge.has-gps {
+            background: #27ae60;
+        }
+
+        .photo-thumb .gps-badge.no-gps {
+            background: #e74c3c;
+        }
+
+        /* Map view - full screen map */
+        #mapView {
+            position: relative;
+            overflow: hidden;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        /* Floating map controls */
+        .map-fab {
+            position: absolute;
+            bottom: 100px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #000;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .map-fab svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .map-fab:active {
+            transform: scale(0.95);
+            background: #333;
+        }
+
+        .map-style-fab {
+            bottom: 170px;
+        }
+
+        /* Activity filter bar */
+        .activity-filter {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            right: 70px;
+            z-index: 1000;
+            display: none;
+            gap: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .activity-filter::-webkit-scrollbar {
+            display: none;
+        }
+
+        .activity-filter.visible {
+            display: flex;
+        }
+
+        .filter-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid transparent;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .filter-chip:active {
+            opacity: 0.8;
+        }
+
+        .filter-chip.inactive {
+            opacity: 0.5;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .filter-chip .chip-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Numbered map markers */
+        .numbered-marker {
+            z-index: 1000 !important;
+        }
+
+        .numbered-marker-inner {
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Marker cluster styling - green to distinguish from purple photo markers */
+        .marker-cluster {
+            background: rgba(34, 197, 94, 0.4);
+            border-radius: 50%;
+        }
+
+        .marker-cluster div {
+            background: #22c55e;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .marker-cluster-small {
+            width: 40px;
+            height: 40px;
+        }
+
+        .marker-cluster-small div {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            font-size: 12px;
+        }
+
+        .marker-cluster-medium {
+            width: 50px;
+            height: 50px;
+        }
+
+        .marker-cluster-medium div {
+            width: 38px;
+            height: 38px;
+            margin: 6px;
+            font-size: 14px;
+        }
+
+        .marker-cluster-large {
+            width: 60px;
+            height: 60px;
+        }
+
+        .marker-cluster-large div {
+            width: 46px;
+            height: 46px;
+            margin: 7px;
+            font-size: 15px;
+        }
+
+        /* Bottom navigation bar */
+        .bottom-nav {
+            display: flex;
+            background: #000;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 10px;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+        }
+
+        .nav-item:active {
+            color: #fff;
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* Empty state */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            color: #888;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            fill: #444;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 1.2em;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.9em;
+            margin-bottom: 24px;
+        }
+
+        /* Primary action button */
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            min-height: 48px;
+        }
+
+        .btn-primary:active {
+            background: #5568d3;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            background: #222;
+            padding: 12px 16px;
+            font-size: 0.85em;
+            color: #aaa;
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #333;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Loading overlay */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Photo detail modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: #000;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            padding: 8px;
+            margin: -8px;
+            margin-right: 12px;
+        }
+
+        .modal-title {
+            flex: 1;
+            font-size: 1em;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-image-container {
+            position: relative;
+            background: #111;
+            min-height: 200px;
+            overflow: hidden;
+            touch-action: pan-x pan-y pinch-zoom;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 50vh;
+            object-fit: contain;
+            display: block;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+        }
+
+        .modal-image.loading {
+            opacity: 0;
+        }
+
+        .modal-image.zoomed {
+            cursor: move;
+        }
+
+        .image-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            border: 3px solid #333;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .image-loader.hidden {
+            display: none;
+        }
+
+        /* Photo navigation bar at bottom */
+        .photo-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #111;
+            border-top: 1px solid #333;
+        }
+
+        .photo-nav-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #333;
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .photo-nav-btn:active {
+            background: #555;
+        }
+
+        .photo-nav-btn:disabled {
+            opacity: 0.3;
+        }
+
+        .photo-nav-btn svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-btn:active {
+            background: rgba(0,0,0,0.8);
+        }
+
+        .fullscreen-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Fullscreen overlay */
+        .fullscreen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            z-index: 10000;
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        .fullscreen-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-overlay img {
+            max-width: 100%;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+        }
+
+        .fullscreen-close:active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .fullscreen-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fullscreen-nav:active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .fullscreen-nav:disabled {
+            opacity: 0.3;
+        }
+
+        .fullscreen-nav svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .fullscreen-nav-prev {
+            left: 16px;
+        }
+
+        .fullscreen-nav-next {
+            right: 16px;
+        }
+
+        .modal-info {
+            padding: 12px 16px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #333;
+            font-size: 0.85em;
+        }
+
+        .info-label {
+            color: #888;
+        }
+
+        .info-value {
+            color: #fff;
+            text-align: right;
+        }
+
+        /* Map style selector modal */
+        .style-list {
+            padding: 8px 0;
+        }
+
+        .style-option {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: white;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        /* Activity type selector */
+        .activity-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px 16px;
+            background: none;
+            border: none;
+            border-bottom: 1px solid #333;
+            color: white;
+            text-align: left;
+            font-size: 1em;
+        }
+
+        .activity-option:active {
+            background: #333;
+        }
+
+        .activity-option .activity-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .style-option:active {
+            background: #333;
+        }
+
+        .style-option.selected {
+            color: #667eea;
+        }
+
+        /* About modal */
+        .about-content {
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .about-content h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .about-content p {
+            margin-bottom: 16px;
+        }
+
+        .about-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .about-content .version {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .about-content .section {
+            margin-bottom: 24px;
+        }
+
+        .about-content .library {
+            margin-bottom: 12px;
+            padding-left: 12px;
+            border-left: 2px solid #444;
+        }
+
+        .about-content .library-name {
+            color: white;
+            font-weight: 500;
+        }
+
+        .about-content .library-license {
+            color: #888;
+            font-size: 12px;
+        }
+
+        /* Hidden file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Leaflet overrides */
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        }
+
+        .leaflet-control-zoom a {
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            font-size: 18px !important;
+            background: #222 !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .leaflet-control-zoom a:first-child {
+            border-radius: 8px 8px 0 0 !important;
+        }
+
+        .leaflet-control-zoom a:last-child {
+            border-radius: 0 0 8px 8px !important;
+        }
+
+        .leaflet-control-attribution {
+            background: rgba(0,0,0,0.6) !important;
+            color: #888 !important;
+            font-size: 10px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <div class="header">
+            <h1>Photo Location Mapper</h1>
+            <div class="header-actions">
+                <button class="header-btn" id="aboutBtn">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main content area -->
+        <div class="content">
+            <!-- Photos View -->
+            <div id="photosView" class="view active">
+                <div class="empty-state" id="emptyState">
+                    <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    <h2>No Photos</h2>
+                    <p>Add photos to see them on the map</p>
+                    <button class="btn-primary" id="addPhotosBtn">Add Photos</button>
+                </div>
+                <div class="stats-bar" id="statsBar" style="display: none;">
+                    <div class="stat">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Photos</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statGps">0</div>
+                        <div class="stat-label">With GPS</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statNoGps">0</div>
+                        <div class="stat-label">No GPS</div>
+                    </div>
+                </div>
+                <div class="photos-grid" id="photosGrid"></div>
+            </div>
+
+            <!-- Map View -->
+            <div id="mapView" class="view">
+                <div id="map"></div>
+                <div class="activity-filter" id="activityFilter"></div>
+                <button class="map-fab map-style-fab" id="mapStyleBtn">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>
+                </button>
+                <button class="map-fab" id="centerMapBtn">
+                    <svg viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <button class="nav-item active" data-view="photosView">
+                <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                Photos
+            </button>
+            <button class="nav-item" data-view="mapView">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Map
+            </button>
+            <button class="nav-item" id="addNavBtn">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Add
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div id="loadingText">Loading...</div>
+    </div>
+
+    <!-- Photo Detail Modal -->
+    <div class="modal" id="photoModal">
+        <div class="modal-header">
+            <button class="modal-close" id="closePhotoModal">←</button>
+            <div class="modal-title" id="photoModalTitle">Photo</div>
+        </div>
+        <div class="modal-content">
+            <div class="modal-image-container">
+                <div class="image-loader" id="imageLoader"></div>
+                <img class="modal-image loading" id="photoModalImage" src="" alt="">
+                <button class="fullscreen-btn" id="fullscreenBtn">
+                    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+                </button>
+            </div>
+            <div class="modal-info" id="photoModalInfo"></div>
+        </div>
+        <div class="photo-nav-bar">
+            <button class="photo-nav-btn" id="photoPrevBtn">
+                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <button class="photo-nav-btn" id="photoNextBtn">
+                <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Image Overlay -->
+    <div class="fullscreen-overlay" id="fullscreenOverlay">
+        <div class="image-loader" id="fullscreenLoader"></div>
+        <img id="fullscreenImage" src="" alt="">
+        <button class="fullscreen-close" id="fullscreenClose">×</button>
+        <button class="fullscreen-nav fullscreen-nav-prev" id="fullscreenPrevBtn">
+            <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <button class="fullscreen-nav fullscreen-nav-next" id="fullscreenNextBtn">
+            <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+    </div>
+
+    <!-- Map Style Modal -->
+    <div class="modal" id="styleModal">
+        <div class="modal-header">
+            <button class="modal-close" id="closeStyleModal">←</button>
+            <div class="modal-title">Map Style</div>
+        </div>
+        <div class="modal-content">
+            <div class="style-list">
+                <button class="style-option selected" data-style="osm">Street Map</button>
+                <button class="style-option" data-style="satellite">Satellite</button>
+                <button class="style-option" data-style="cycle">Cycle Map</button>
+                <button class="style-option" data-style="humanitarian">Humanitarian</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Type Selector Modal -->
+    <div class="modal" id="activityModal">
+        <div class="modal-header">
+            <button class="modal-close" id="closeActivityModal">←</button>
+            <div class="modal-title" id="activityModalTitle">Select Activity Type</div>
+        </div>
+        <div class="modal-content">
+            <div class="style-list" id="activityList"></div>
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal" id="aboutModal">
+        <div class="modal-header">
+            <button class="modal-close" id="closeAboutModal">←</button>
+            <div class="modal-title">About</div>
+        </div>
+        <div class="modal-content">
+            <div class="about-content">
+                <div class="section">
+                    <h2>Photo Location Mapper</h2>
+                    <p class="version">Version 1.0.0 (Build 137)</p>
+                    <p>Extract GPS coordinates from photos and visualize them on an interactive map.</p>
+                    <p>Copyright © 2026 Gordon Williams</p>
+                </div>
+
+                <div class="section">
+                    <h2>License</h2>
+                    <p>This software is licensed under the <strong>MIT License</strong>.</p>
+                    <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies.</p>
+                </div>
+
+                <div class="section">
+                    <h2>Third-Party Libraries</h2>
+                    <div class="library">
+                        <div class="library-name">Leaflet v1.9.4</div>
+                        <div class="library-license">BSD-2-Clause License</div>
+                        <div>© Volodymyr Agafonkin</div>
+                    </div>
+                    <div class="library">
+                        <div class="library-name">Leaflet.markercluster v1.5.3</div>
+                        <div class="library-license">MIT License</div>
+                        <div>© Dave Leaver, smartrak</div>
+                    </div>
+                    <div class="library">
+                        <div class="library-name">ExifReader v4.21.1</div>
+                        <div class="library-license">MPL-2.0 License</div>
+                        <div>© Mattias Wallander</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="photoInput" accept="image/*" multiple>
+    <input type="file" id="routeInput" accept=".gpx,.json" multiple>
+
+    <script>
+        // App state
+        let photos = [];
+        let map = null;
+        let markers = [];
+        let markerCluster = null;
+        let currentStyle = 'osm';
+        let routes = [];
+        let routePolylines = [];
+        let selectedActivities = new Set();
+
+        // Activity type colors (matching Arc app colors)
+        const activityColors = {
+            walking: '#12A656',
+            running: '#EB781B',
+            cycling: '#039FD4',
+            driving: '#E35641',
+            bus: '#4056B5',
+            train: '#4056B5',
+            subway: '#4056B5',
+            tram: '#4056B5',
+            ferry: '#4884AE',
+            flying: '#7A3CFC',
+            unknown: '#888888'
+        };
+
+        function getActivityColor(activityType) {
+            const type = (activityType || 'unknown').toLowerCase();
+            return activityColors[type] || activityColors.unknown;
+        }
+
+        // Map tile sources
+        const mapStyles = {
+            osm: {
+                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                attribution: '© OpenStreetMap'
+            },
+            satellite: {
+                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                attribution: '© Esri'
+            },
+            cycle: {
+                url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+                attribution: '© CyclOSM'
+            },
+            humanitarian: {
+                url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+                attribution: '© Humanitarian OSM'
+            }
+        };
+
+        let currentTileLayer = null;
+
+        // DOM elements
+        const photoInput = document.getElementById('photoInput');
+        const routeInput = document.getElementById('routeInput');
+        const photosGrid = document.getElementById('photosGrid');
+        const emptyState = document.getElementById('emptyState');
+        const statsBar = document.getElementById('statsBar');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
+
+        let currentView = 'photosView';
+
+        function setupEventListeners() {
+            // File inputs
+            photoInput.addEventListener('change', handlePhotoSelect);
+            routeInput.addEventListener('change', handleRouteSelect);
+            document.getElementById('addPhotosBtn').addEventListener('click', () => photoInput.click());
+            document.getElementById('addNavBtn').addEventListener('click', handleAddButton);
+
+            // Navigation
+            document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
+                btn.addEventListener('click', () => switchView(btn.dataset.view));
+            });
+
+            // Map controls
+            document.getElementById('centerMapBtn').addEventListener('click', centerMap);
+            document.getElementById('mapStyleBtn').addEventListener('click', () => {
+                document.getElementById('styleModal').classList.add('active');
+            });
+
+            // Modals
+            document.getElementById('closePhotoModal').addEventListener('click', () => {
+                document.getElementById('photoModal').classList.remove('active');
+                // Pan map to current photo if opened from map view
+                if (openedFromMap && map) {
+                    const photo = photos[currentPhotoIndex];
+                    if (photo && photo.gps) {
+                        map.panTo([photo.gps.lat, photo.gps.lng]);
+                    }
+                }
+            });
+            document.getElementById('closeStyleModal').addEventListener('click', () => {
+                document.getElementById('styleModal').classList.remove('active');
+            });
+
+            // About modal
+            document.getElementById('aboutBtn').addEventListener('click', () => {
+                document.getElementById('aboutModal').classList.add('active');
+            });
+            document.getElementById('closeAboutModal').addEventListener('click', () => {
+                document.getElementById('aboutModal').classList.remove('active');
+            });
+
+            // Fullscreen
+            document.getElementById('fullscreenBtn').addEventListener('click', openFullscreen);
+            document.getElementById('fullscreenClose').addEventListener('click', closeFullscreen);
+            document.getElementById('fullscreenOverlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('fullscreenOverlay') ||
+                    e.target === document.getElementById('fullscreenImage')) closeFullscreen();
+            });
+            document.getElementById('fullscreenPrevBtn').addEventListener('click', fullscreenPrevPhoto);
+            document.getElementById('fullscreenNextBtn').addEventListener('click', fullscreenNextPhoto);
+
+            // Photo navigation buttons
+            document.getElementById('photoPrevBtn').addEventListener('click', showPrevPhoto);
+            document.getElementById('photoNextBtn').addEventListener('click', showNextPhoto);
+
+            // Map style selection
+            document.querySelectorAll('.style-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    setMapStyle(btn.dataset.style);
+                    document.getElementById('styleModal').classList.remove('active');
+                });
+            });
+        }
+
+        function switchView(viewId) {
+            currentView = viewId;
+
+            // Update nav
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === viewId);
+            });
+
+            // Update views
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.toggle('active', view.id === viewId);
+            });
+
+            // Initialize or resize map after view is shown
+            if (viewId === 'mapView') {
+                setTimeout(() => {
+                    if (!map) {
+                        initMap();
+                    } else {
+                        map.invalidateSize();
+                    }
+                }, 50);
+            }
+        }
+
+        function handleAddButton() {
+            if (currentView === 'mapView') {
+                routeInput.click();
+            } else {
+                photoInput.click();
+            }
+        }
+
+        function initMap() {
+            const mapEl = document.getElementById('map');
+            const mapView = document.getElementById('mapView');
+            console.log('Map container size:', mapEl.offsetWidth, 'x', mapEl.offsetHeight);
+            console.log('MapView size:', mapView.offsetWidth, 'x', mapView.offsetHeight);
+
+            map = L.map('map', {
+                zoomControl: true
+            }).setView([0, 0], 2);
+
+            currentTileLayer = L.tileLayer(mapStyles[currentStyle].url, {
+                attribution: mapStyles[currentStyle].attribution,
+                maxZoom: 19,
+                subdomains: ['a', 'b', 'c']
+            }).addTo(map);
+
+            // Force map to recalculate size
+            setTimeout(() => {
+                map.invalidateSize();
+                console.log('After invalidateSize:', mapEl.offsetWidth, 'x', mapEl.offsetHeight);
+            }, 100);
+
+            // Add markers for photos with GPS
+            updateMapMarkers();
+        }
+
+        function setMapStyle(style) {
+            currentStyle = style;
+
+            // Update selected state
+            document.querySelectorAll('.style-option').forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.style === style);
+            });
+
+            // Update map tiles
+            if (map && currentTileLayer) {
+                map.removeLayer(currentTileLayer);
+                currentTileLayer = L.tileLayer(mapStyles[style].url, {
+                    attribution: mapStyles[style].attribution,
+                    maxZoom: 19
+                }).addTo(map);
+            }
+        }
+
+        function updateMapMarkers() {
+            if (!map) return;
+
+            // Clear existing cluster and markers
+            if (markerCluster) {
+                map.removeLayer(markerCluster);
+            }
+            markers = [];
+
+            // Create new cluster group
+            markerCluster = L.markerClusterGroup({
+                maxClusterRadius: 80,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true,
+                disableClusteringAtZoom: 19
+            });
+
+            // Add numbered markers for photos with GPS
+            let markerNum = 0;
+            photos.forEach((photo, idx) => {
+                if (!photo.gps) return;
+                markerNum++;
+
+                const numberIcon = L.divIcon({
+                    className: 'numbered-marker',
+                    html: `<div class="numbered-marker-inner">${markerNum}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker([photo.gps.lat, photo.gps.lng], {
+                    icon: numberIcon,
+                    zIndexOffset: 1000
+                });
+
+                // Tap marker to show photo detail
+                marker.on('click', () => {
+                    openedFromMap = true;
+                    showPhotoDetail(idx);
+                });
+                markers.push(marker);
+                markerCluster.addLayer(marker);
+            });
+
+            map.addLayer(markerCluster);
+
+            // Fit bounds if we have markers
+            if (markers.length > 0) {
+                map.fitBounds(markerCluster.getBounds().pad(0.1));
+            }
+        }
+
+        function centerMap() {
+            if (map && markerCluster && markers.length > 0) {
+                map.fitBounds(markerCluster.getBounds().pad(0.1));
+            }
+        }
+
+        async function handlePhotoSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            showLoading(`Loading ${files.length} photo${files.length > 1 ? 's' : ''}...`);
+
+            for (let i = 0; i < files.length; i++) {
+                loadingText.textContent = `Loading ${i + 1} of ${files.length}...`;
+                await processPhoto(files[i]);
+            }
+
+            hideLoading();
+            updateUI();
+            updateMapMarkers();
+
+            photoInput.value = '';
+        }
+
+        // Pending routes that need activity type selection
+        let pendingRoutes = [];
+
+        async function handleRouteSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            showLoading(`Loading ${files.length} route${files.length > 1 ? 's' : ''}...`);
+
+            // Clear existing routes
+            routes = [];
+            selectedActivities.clear();
+            pendingRoutes = [];
+
+            for (let i = 0; i < files.length; i++) {
+                loadingText.textContent = `Loading ${i + 1} of ${files.length}...`;
+                try {
+                    const fileName = files[i].name.toLowerCase();
+                    if (fileName.endsWith('.gpx')) {
+                        await parseGPXFile(files[i]);
+                    } else {
+                        await parseJSONFile(files[i]);
+                    }
+                } catch (error) {
+                    console.error('Error loading route file:', error);
+                }
+            }
+
+            hideLoading();
+
+            // If there are routes with unknown activity, ask user to select
+            if (pendingRoutes.length > 0) {
+                const firstRoute = pendingRoutes[0];
+                const selectedType = await showActivitySelector(
+                    firstRoute.name || (pendingRoutes.length > 1 ? `${pendingRoutes.length} routes` : null)
+                );
+
+                // Apply selected type to all pending routes
+                pendingRoutes.forEach(route => {
+                    route.activityType = selectedType;
+                    routes.push(route);
+                });
+                pendingRoutes = [];
+            }
+
+            updateActivityFilter();
+            updateRoutePolylines();
+
+            // Fit map to show routes
+            if (map && routes.length > 0) {
+                const bounds = L.latLngBounds();
+                routes.forEach(r => {
+                    if (selectedActivities.has(r.activityType)) {
+                        r.path.forEach(p => bounds.extend([p.lat, p.lng]));
+                    }
+                });
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds.pad(0.1));
+                }
+            }
+
+            routeInput.value = '';
+        }
+
+        async function parseGPXFile(file) {
+            const text = await file.text();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(text, 'application/xml');
+
+            const parseError = xml.querySelector('parsererror');
+            if (parseError) {
+                throw new Error('Invalid GPX XML format');
+            }
+
+            const tracks = xml.querySelectorAll('trk');
+
+            for (const track of tracks) {
+                const typeEl = track.querySelector('type');
+                const nameEl = track.querySelector('name');
+                const explicitType = typeEl ? typeEl.textContent.toLowerCase() : null;
+                const trackName = nameEl ? nameEl.textContent : null;
+
+                if (explicitType === 'stationary') continue;
+
+                const segments = track.querySelectorAll('trkseg');
+
+                for (const segment of segments) {
+                    const trackpoints = segment.querySelectorAll('trkpt');
+                    if (trackpoints.length < 2) continue;
+
+                    const path = [];
+                    let startTime = null;
+                    let endTime = null;
+
+                    trackpoints.forEach(trkpt => {
+                        const lat = parseFloat(trkpt.getAttribute('lat'));
+                        const lng = parseFloat(trkpt.getAttribute('lon'));
+                        const timeEl = trkpt.querySelector('time');
+                        const eleEl = trkpt.querySelector('ele');
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const point = { lat, lng };
+
+                            if (timeEl) {
+                                const timestamp = new Date(timeEl.textContent);
+                                point.timestamp = timestamp.toISOString();
+                                if (!startTime) startTime = timestamp;
+                                endTime = timestamp;
+                            }
+
+                            if (eleEl) {
+                                const ele = parseFloat(eleEl.textContent);
+                                if (!isNaN(ele)) point.ele = ele;
+                            }
+
+                            path.push(point);
+                        }
+                    });
+
+                    if (path.length > 1) {
+                        const distanceKm = calculateDistance(path) / 1000;
+
+                        // Infer activity type from speed if not specified
+                        let activityType = explicitType;
+                        if (!activityType && startTime && endTime) {
+                            const durationHours = (endTime - startTime) / (1000 * 60 * 60);
+                            if (durationHours > 0.001) {
+                                const avgSpeedKmh = distanceKm / durationHours;
+                                activityType = inferActivityFromSpeed(avgSpeedKmh);
+                            }
+                        }
+
+                        const routeData = {
+                            date: (startTime || new Date()).toISOString().split('T')[0],
+                            startTime: startTime || new Date(),
+                            endTime: endTime || new Date(),
+                            path: path,
+                            activityType: activityType ? normalizeActivityType(activityType) : null,
+                            distance: distanceKm * 1000,
+                            name: trackName
+                        };
+
+                        // If activity type couldn't be determined, add to pending
+                        if (!activityType || activityType === 'unknown') {
+                            pendingRoutes.push(routeData);
+                        } else {
+                            routes.push(routeData);
+                        }
+                    }
+                }
+            }
+        }
+
+        async function parseJSONFile(file) {
+            const text = await file.text();
+            const data = JSON.parse(text);
+
+            // Handle Google Takeout format
+            if (data.timelineItems) {
+                data.timelineItems.forEach(item => {
+                    if (!item.isVisit && item.samples && item.samples.length > 0) {
+                        const path = item.samples
+                            .filter(s => s.location && s.location.latitude && s.location.longitude)
+                            .map(s => {
+                                const point = {
+                                    lat: s.location.latitude,
+                                    lng: s.location.longitude,
+                                    timestamp: s.date
+                                };
+                                if (s.location.altitude !== undefined && s.location.altitude !== null) {
+                                    point.ele = s.location.altitude;
+                                }
+                                return point;
+                            });
+
+                        if (path.length > 1) {
+                            const startTime = new Date(item.startDate);
+                            const endTime = new Date(item.endDate);
+
+                            let rawActivityType = item.activityType ||
+                                                  item.activity?.topActivity?.type ||
+                                                  item.samples?.[0]?.classifiedType ||
+                                                  'unknown';
+
+                            const activityType = normalizeActivityType(rawActivityType);
+                            if (activityType === 'stationary') return;
+
+                            routes.push({
+                                date: startTime.toISOString().split('T')[0],
+                                startTime: startTime,
+                                endTime: endTime,
+                                path: path,
+                                activityType: activityType,
+                                distance: calculateDistance(path)
+                            });
+                        }
+                    }
+                });
+            }
+        }
+
+        function inferActivityFromSpeed(avgSpeedKmh) {
+            if (avgSpeedKmh < 1) return 'stationary';
+            if (avgSpeedKmh < 7) return 'walking';
+            if (avgSpeedKmh < 15) return 'running';
+            if (avgSpeedKmh < 40) return 'cycling';
+            return 'driving';
+        }
+
+        function normalizeActivityType(rawType) {
+            if (!rawType) return 'unknown';
+            const type = rawType.toLowerCase().trim();
+
+            const activityMap = {
+                'walking': 'walking', 'walk': 'walking', 'on_foot': 'walking', 'foot': 'walking',
+                'running': 'running', 'run': 'running',
+                'cycling': 'cycling', 'cycle': 'cycling', 'biking': 'cycling', 'bike': 'cycling', 'bicycle': 'cycling', 'on_bicycle': 'cycling',
+                'driving': 'driving', 'drive': 'driving', 'car': 'driving', 'in_vehicle': 'driving', 'automotive': 'driving',
+                'bus': 'bus', 'in_bus': 'bus',
+                'train': 'train', 'in_train': 'train',
+                'subway': 'subway', 'in_subway': 'subway',
+                'tram': 'tram', 'in_tram': 'tram',
+                'ferry': 'ferry', 'in_ferry': 'ferry',
+                'flying': 'flying', 'flight': 'flying', 'airplane': 'flying', 'in_airplane': 'flying', 'plane': 'flying',
+                'stationary': 'stationary', 'still': 'stationary', 'not_moving': 'stationary',
+                'unknown': 'unknown'
+            };
+
+            return activityMap[type] || type;
+        }
+
+        // Common activity types for selection
+        const selectableActivities = ['walking', 'running', 'cycling', 'driving', 'bus', 'train', 'flying'];
+
+        function showActivitySelector(trackName) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('activityModal');
+                const title = document.getElementById('activityModalTitle');
+                const list = document.getElementById('activityList');
+
+                title.textContent = trackName ? `Activity: ${trackName}` : 'Select Activity Type';
+
+                list.innerHTML = '';
+                selectableActivities.forEach(activity => {
+                    const color = getActivityColor(activity);
+                    const btn = document.createElement('button');
+                    btn.className = 'activity-option';
+                    btn.innerHTML = `
+                        <span class="activity-dot" style="background: ${color}"></span>
+                        ${activity.charAt(0).toUpperCase() + activity.slice(1)}
+                    `;
+                    btn.addEventListener('click', () => {
+                        modal.classList.remove('active');
+                        resolve(activity);
+                    });
+                    list.appendChild(btn);
+                });
+
+                document.getElementById('closeActivityModal').onclick = () => {
+                    modal.classList.remove('active');
+                    resolve('unknown');
+                };
+
+                modal.classList.add('active');
+            });
+        }
+
+        function calculateDistance(path) {
+            let total = 0;
+            for (let i = 1; i < path.length; i++) {
+                const R = 6371000; // Earth's radius in meters
+                const lat1 = path[i-1].lat * Math.PI / 180;
+                const lat2 = path[i].lat * Math.PI / 180;
+                const dLat = (path[i].lat - path[i-1].lat) * Math.PI / 180;
+                const dLon = (path[i].lng - path[i-1].lng) * Math.PI / 180;
+
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                         Math.cos(lat1) * Math.cos(lat2) *
+                         Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                total += R * c;
+            }
+            return total;
+        }
+
+        function updateActivityFilter() {
+            const filterEl = document.getElementById('activityFilter');
+
+            // Get unique activity types from routes
+            const activityTypes = [...new Set(routes.map(r => r.activityType))];
+
+            // Hide filter if no routes
+            if (activityTypes.length === 0) {
+                filterEl.classList.remove('visible');
+                return;
+            }
+
+            // Initialize selectedActivities if empty
+            if (selectedActivities.size === 0) {
+                activityTypes.forEach(a => selectedActivities.add(a));
+            }
+
+            // Build filter chips
+            filterEl.innerHTML = '';
+            activityTypes.forEach(activity => {
+                const color = getActivityColor(activity);
+                const isActive = selectedActivities.has(activity);
+                const chip = document.createElement('button');
+                chip.className = 'filter-chip' + (isActive ? '' : ' inactive');
+                chip.innerHTML = `
+                    <span class="chip-dot" style="background: ${color}"></span>
+                    ${activity.charAt(0).toUpperCase() + activity.slice(1)}
+                `;
+                chip.addEventListener('click', () => {
+                    if (selectedActivities.has(activity)) {
+                        selectedActivities.delete(activity);
+                    } else {
+                        selectedActivities.add(activity);
+                    }
+                    updateActivityFilter();
+                    updateRoutePolylines();
+                });
+                filterEl.appendChild(chip);
+            });
+
+            filterEl.classList.add('visible');
+        }
+
+        function updateRoutePolylines() {
+            if (!map) return;
+
+            // Remove existing polylines
+            routePolylines.forEach(p => {
+                if (p.border) map.removeLayer(p.border);
+                if (p.line) map.removeLayer(p.line);
+            });
+            routePolylines = [];
+
+            // Draw only selected routes
+            routes.forEach(route => {
+                if (!selectedActivities.has(route.activityType)) return;
+
+                const color = getActivityColor(route.activityType);
+
+                // White border first (wider line)
+                const borderLine = L.polyline(route.path, {
+                    color: '#ffffff',
+                    weight: 8,
+                    opacity: 0.9
+                }).addTo(map);
+
+                // Colored route on top
+                const polyline = L.polyline(route.path, {
+                    color: color,
+                    weight: 5,
+                    opacity: 0.8
+                }).addTo(map);
+
+                // Popup with route info
+                const distKm = (route.distance / 1000).toFixed(2);
+                const activityName = route.activityType.charAt(0).toUpperCase() + route.activityType.slice(1);
+                polyline.bindPopup(`
+                    <div style="text-align: center; min-width: 120px;">
+                        <div style="font-weight: 600; color: ${color}; margin-bottom: 4px;">${activityName}</div>
+                        <div style="font-size: 0.9em;">Distance: ${distKm} km</div>
+                    </div>
+                `);
+
+                routePolylines.push({ border: borderLine, line: polyline });
+            });
+        }
+
+        async function processPhoto(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const photo = {
+                        name: file.name,
+                        src: e.target.result,
+                        gps: null,
+                        date: null,
+                        camera: null,
+                        lens: null,
+                        focalLength: null,
+                        aperture: null,
+                        shutter: null,
+                        iso: null,
+                        dimensions: null
+                    };
+
+                    // Extract EXIF
+                    try {
+                        const tags = ExifReader.load(e.target.result);
+
+                        // GPS - need to check reference for sign
+                        if (tags.GPSLatitude && tags.GPSLongitude) {
+                            let lat = parseFloat(tags.GPSLatitude.description);
+                            let lng = parseFloat(tags.GPSLongitude.description);
+
+                            // Apply sign based on reference (S = negative lat, W = negative lng)
+                            if (tags.GPSLatitudeRef && tags.GPSLatitudeRef.value[0] === 'S') {
+                                lat = -Math.abs(lat);
+                            }
+                            if (tags.GPSLongitudeRef && tags.GPSLongitudeRef.value[0] === 'W') {
+                                lng = -Math.abs(lng);
+                            }
+
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                photo.gps = { lat, lng };
+                            }
+                        }
+
+                        // Date
+                        if (tags.DateTimeOriginal) {
+                            photo.date = tags.DateTimeOriginal.description;
+                        }
+
+                        // Camera make/model
+                        const make = tags.Make?.description || '';
+                        const model = tags.Model?.description || '';
+                        if (model) {
+                            // Avoid duplication like "Apple iPhone 12" when make is Apple and model is iPhone 12
+                            photo.camera = model.toLowerCase().includes(make.toLowerCase()) ? model : `${make} ${model}`.trim();
+                        }
+
+                        // Lens
+                        if (tags.LensModel?.description) {
+                            photo.lens = tags.LensModel.description;
+                        }
+
+                        // Focal length - format to 1 decimal place
+                        if (tags.FocalLength?.value) {
+                            const fl = tags.FocalLength.value;
+                            const flNum = Array.isArray(fl) ? fl[0] / fl[1] : parseFloat(fl);
+                            photo.focalLength = Number.isInteger(flNum) ? `${flNum}mm` : `${flNum.toFixed(1)}mm`;
+                        }
+
+                        // Aperture - format to 1 decimal place
+                        if (tags.FNumber?.value) {
+                            const fn = tags.FNumber.value;
+                            const fnNum = Array.isArray(fn) ? fn[0] / fn[1] : parseFloat(fn);
+                            photo.aperture = Number.isInteger(fnNum) ? `f/${fnNum}` : `f/${fnNum.toFixed(1)}`;
+                        }
+
+                        // Shutter speed
+                        if (tags.ExposureTime?.description) {
+                            photo.shutter = tags.ExposureTime.description;
+                        }
+
+                        // ISO
+                        if (tags.ISOSpeedRatings?.description) {
+                            photo.iso = tags.ISOSpeedRatings.description;
+                        }
+
+                        // Dimensions
+                        const width = tags.ImageWidth?.value || tags['Image Width']?.value;
+                        const height = tags.ImageHeight?.value || tags['Image Height']?.value;
+                        if (width && height) {
+                            photo.dimensions = `${width} × ${height}`;
+                        }
+                    } catch (err) {
+                        console.warn('EXIF error:', err);
+                    }
+
+                    photos.push(photo);
+                    resolve();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function updateUI() {
+            const hasPhotos = photos.length > 0;
+            emptyState.style.display = hasPhotos ? 'none' : 'flex';
+            statsBar.style.display = hasPhotos ? 'flex' : 'none';
+
+            // Update stats
+            const withGps = photos.filter(p => p.gps).length;
+            document.getElementById('statTotal').textContent = photos.length;
+            document.getElementById('statGps').textContent = withGps;
+            document.getElementById('statNoGps').textContent = photos.length - withGps;
+
+            // Update grid
+            renderPhotosGrid();
+        }
+
+        function renderPhotosGrid() {
+            photosGrid.innerHTML = '';
+
+            photos.forEach((photo, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'photo-thumb';
+                thumb.innerHTML = `
+                    <img src="${URL.createObjectURL(new Blob([photo.src]))}" alt="${photo.name}">
+                    <div class="gps-badge ${photo.gps ? 'has-gps' : 'no-gps'}">
+                        ${photo.gps ? '✓' : '✗'}
+                    </div>
+                `;
+                thumb.addEventListener('click', () => {
+                    openedFromMap = false;
+                    showPhotoDetail(index);
+                });
+                photosGrid.appendChild(thumb);
+            });
+        }
+
+        let currentPhotoUrl = null;
+        let currentPhotoIndex = 0;
+        let openedFromMap = false;
+
+        function showPhotoDetail(index) {
+            currentPhotoIndex = index;
+            const photo = photos[index];
+            document.getElementById('photoModalTitle').textContent = `${index + 1} / ${photos.length}`;
+
+            // Show loader while image loads
+            const loader = document.getElementById('imageLoader');
+            const img = document.getElementById('photoModalImage');
+            loader.classList.remove('hidden');
+            img.classList.add('loading');
+
+            // Create object URL for the image
+            if (currentPhotoUrl) URL.revokeObjectURL(currentPhotoUrl);
+            currentPhotoUrl = URL.createObjectURL(new Blob([photo.src]));
+
+            // Hide loader when image loads
+            img.onload = function() {
+                loader.classList.add('hidden');
+                img.classList.remove('loading');
+            };
+            img.src = currentPhotoUrl;
+
+            // Build info rows
+            let infoHtml = '';
+
+            const addRow = (label, value) => {
+                if (value) {
+                    infoHtml += `<div class="info-row"><span class="info-label">${label}</span><span class="info-value">${value}</span></div>`;
+                }
+            };
+
+            addRow('Filename', photo.name);
+            addRow('Date', photo.date);
+
+            if (photo.gps) {
+                addRow('Location', `${photo.gps.lat.toFixed(6)}, ${photo.gps.lng.toFixed(6)}`);
+            } else {
+                infoHtml += `<div class="info-row"><span class="info-label">Location</span><span class="info-value" style="color:#e74c3c">No GPS data</span></div>`;
+            }
+
+            addRow('Camera', photo.camera);
+            addRow('Lens', photo.lens);
+
+            // Combine exposure settings on one line if available
+            const exposureSettings = [photo.focalLength, photo.aperture, photo.shutter, photo.iso ? `ISO ${photo.iso}` : null]
+                .filter(Boolean).join('  ');
+            addRow('Settings', exposureSettings);
+
+            addRow('Dimensions', photo.dimensions);
+
+            document.getElementById('photoModalInfo').innerHTML = infoHtml;
+
+            // Update nav button states
+            document.getElementById('photoPrevBtn').disabled = (index === 0);
+            document.getElementById('photoNextBtn').disabled = (index === photos.length - 1);
+
+            document.getElementById('photoModal').classList.add('active');
+        }
+
+        function showNextPhoto() {
+            if (currentPhotoIndex < photos.length - 1) {
+                showPhotoDetail(currentPhotoIndex + 1);
+            }
+        }
+
+        function showPrevPhoto() {
+            if (currentPhotoIndex > 0) {
+                showPhotoDetail(currentPhotoIndex - 1);
+            }
+        }
+
+        // Swipe gesture support
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+
+        function handleSwipeGesture() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const minSwipeDistance = 50;
+
+            // Only trigger if horizontal swipe is dominant
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+                if (deltaX < 0) {
+                    showNextPhoto(); // Swipe left = next
+                } else {
+                    showPrevPhoto(); // Swipe right = prev
+                }
+            }
+        }
+
+        // Attach swipe listeners to photo modal
+        document.getElementById('photoModal').addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.getElementById('photoModal').addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipeGesture();
+        }, { passive: true });
+
+        // Attach swipe listeners to fullscreen overlay
+        document.getElementById('fullscreenOverlay').addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.getElementById('fullscreenOverlay').addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            touchEndY = e.changedTouches[0].screenY;
+            handleFullscreenSwipe();
+        }, { passive: true });
+
+        function handleFullscreenSwipe() {
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const minSwipeDistance = 50;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+                if (deltaX < 0) {
+                    fullscreenNextPhoto();
+                } else {
+                    fullscreenPrevPhoto();
+                }
+            }
+        }
+
+        function showFullscreenLoader() {
+            const loader = document.getElementById('fullscreenLoader');
+            const img = document.getElementById('fullscreenImage');
+            loader.classList.remove('hidden');
+            img.classList.add('loading');
+        }
+
+        function hideFullscreenLoader() {
+            const loader = document.getElementById('fullscreenLoader');
+            const img = document.getElementById('fullscreenImage');
+            loader.classList.add('hidden');
+            img.classList.remove('loading');
+        }
+
+        function openFullscreen() {
+            if (currentPhotoUrl) {
+                showFullscreenLoader();
+                const img = document.getElementById('fullscreenImage');
+                img.onload = hideFullscreenLoader;
+                img.src = currentPhotoUrl;
+                updateFullscreenNavButtons();
+                document.getElementById('fullscreenOverlay').classList.add('active');
+            }
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenOverlay').classList.remove('active');
+            resetFullscreenZoom();
+        }
+
+        function updateFullscreenNavButtons() {
+            document.getElementById('fullscreenPrevBtn').disabled = (currentPhotoIndex === 0);
+            document.getElementById('fullscreenNextBtn').disabled = (currentPhotoIndex === photos.length - 1);
+        }
+
+        function fullscreenPrevPhoto() {
+            if (currentPhotoIndex > 0) {
+                showFullscreenLoader();
+                showPhotoDetail(currentPhotoIndex - 1);
+                const img = document.getElementById('fullscreenImage');
+                img.onload = hideFullscreenLoader;
+                img.src = currentPhotoUrl;
+                updateFullscreenNavButtons();
+            }
+        }
+
+        function fullscreenNextPhoto() {
+            if (currentPhotoIndex < photos.length - 1) {
+                showFullscreenLoader();
+                showPhotoDetail(currentPhotoIndex + 1);
+                const img = document.getElementById('fullscreenImage');
+                img.onload = hideFullscreenLoader;
+                img.src = currentPhotoUrl;
+                updateFullscreenNavButtons();
+            }
+        }
+
+        // Pinch-to-zoom for fullscreen
+        const fullscreenZoom = {
+            scale: 1,
+            lastScale: 1,
+            posX: 0,
+            posY: 0,
+            lastPosX: 0,
+            lastPosY: 0,
+            startDistance: 0,
+            startX: 0,
+            startY: 0,
+            isPinching: false,
+            isPanning: false
+        };
+
+        function getDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function getMidpoint(touches) {
+            return {
+                x: (touches[0].clientX + touches[1].clientX) / 2,
+                y: (touches[0].clientY + touches[1].clientY) / 2
+            };
+        }
+
+        function resetFullscreenZoom() {
+            fullscreenZoom.scale = 1;
+            fullscreenZoom.lastScale = 1;
+            fullscreenZoom.posX = 0;
+            fullscreenZoom.posY = 0;
+            fullscreenZoom.lastPosX = 0;
+            fullscreenZoom.lastPosY = 0;
+            const img = document.getElementById('fullscreenImage');
+            img.style.transform = 'scale(1) translate(0px, 0px)';
+        }
+
+        function updateFullscreenTransform() {
+            const img = document.getElementById('fullscreenImage');
+            img.style.transform = `scale(${fullscreenZoom.scale}) translate(${fullscreenZoom.posX}px, ${fullscreenZoom.posY}px)`;
+        }
+
+        document.getElementById('fullscreenOverlay').addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                fullscreenZoom.isPinching = true;
+                fullscreenZoom.startDistance = getDistance(e.touches);
+                fullscreenZoom.lastScale = fullscreenZoom.scale;
+            } else if (e.touches.length === 1 && fullscreenZoom.scale > 1) {
+                fullscreenZoom.isPanning = true;
+                fullscreenZoom.startX = e.touches[0].clientX - fullscreenZoom.posX * fullscreenZoom.scale;
+                fullscreenZoom.startY = e.touches[0].clientY - fullscreenZoom.posY * fullscreenZoom.scale;
+            }
+        }, { passive: false });
+
+        document.getElementById('fullscreenOverlay').addEventListener('touchmove', (e) => {
+            if (fullscreenZoom.isPinching && e.touches.length === 2) {
+                e.preventDefault();
+                const distance = getDistance(e.touches);
+                fullscreenZoom.scale = Math.min(5, Math.max(1, fullscreenZoom.lastScale * (distance / fullscreenZoom.startDistance)));
+                if (fullscreenZoom.scale === 1) {
+                    fullscreenZoom.posX = 0;
+                    fullscreenZoom.posY = 0;
+                }
+                updateFullscreenTransform();
+            } else if (fullscreenZoom.isPanning && e.touches.length === 1 && fullscreenZoom.scale > 1) {
+                e.preventDefault();
+                fullscreenZoom.posX = (e.touches[0].clientX - fullscreenZoom.startX) / fullscreenZoom.scale;
+                fullscreenZoom.posY = (e.touches[0].clientY - fullscreenZoom.startY) / fullscreenZoom.scale;
+                updateFullscreenTransform();
+            }
+        }, { passive: false });
+
+        document.getElementById('fullscreenOverlay').addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                fullscreenZoom.isPinching = false;
+                fullscreenZoom.lastScale = fullscreenZoom.scale;
+            }
+            if (e.touches.length === 0) {
+                fullscreenZoom.isPanning = false;
+                fullscreenZoom.lastPosX = fullscreenZoom.posX;
+                fullscreenZoom.lastPosY = fullscreenZoom.posY;
+            }
+        }, { passive: true });
+
+        // Double-tap to zoom/reset in fullscreen
+        let lastTapTime = 0;
+        document.getElementById('fullscreenImage').addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+                e.stopPropagation();
+                if (fullscreenZoom.scale > 1) {
+                    resetFullscreenZoom();
+                } else {
+                    fullscreenZoom.scale = 2.5;
+                    fullscreenZoom.lastScale = 2.5;
+                    updateFullscreenTransform();
+                }
+            }
+            lastTapTime = now;
+        });
+
+        // Reset zoom when changing photos
+        const origFullscreenPrev = fullscreenPrevPhoto;
+        const origFullscreenNext = fullscreenNextPhoto;
+        fullscreenPrevPhoto = function() {
+            resetFullscreenZoom();
+            origFullscreenPrev();
+        };
+        fullscreenNextPhoto = function() {
+            resetFullscreenZoom();
+            origFullscreenNext();
+        };
+
+        // Pinch-to-zoom for modal image
+        const modalZoom = {
+            scale: 1,
+            lastScale: 1,
+            startDistance: 0
+        };
+
+        function resetModalZoom() {
+            modalZoom.scale = 1;
+            modalZoom.lastScale = 1;
+            const img = document.getElementById('photoModalImage');
+            img.style.transform = 'scale(1)';
+            img.classList.remove('zoomed');
+        }
+
+        document.getElementById('photoModalImage').addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                modalZoom.startDistance = getDistance(e.touches);
+                modalZoom.lastScale = modalZoom.scale;
+            }
+        }, { passive: false });
+
+        document.getElementById('photoModalImage').addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const distance = getDistance(e.touches);
+                modalZoom.scale = Math.min(4, Math.max(1, modalZoom.lastScale * (distance / modalZoom.startDistance)));
+                const img = document.getElementById('photoModalImage');
+                img.style.transform = `scale(${modalZoom.scale})`;
+                if (modalZoom.scale > 1) {
+                    img.classList.add('zoomed');
+                } else {
+                    img.classList.remove('zoomed');
+                }
+            }
+        }, { passive: false });
+
+        document.getElementById('photoModalImage').addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                modalZoom.lastScale = modalZoom.scale;
+            }
+        }, { passive: true });
+
+        // Double-tap to zoom/reset modal image
+        let modalLastTapTime = 0;
+        document.getElementById('photoModalImage').addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - modalLastTapTime < 300) {
+                if (modalZoom.scale > 1) {
+                    resetModalZoom();
+                } else {
+                    modalZoom.scale = 2.5;
+                    modalZoom.lastScale = 2.5;
+                    const img = document.getElementById('photoModalImage');
+                    img.style.transform = `scale(${modalZoom.scale})`;
+                    img.classList.add('zoomed');
+                }
+            }
+            modalLastTapTime = now;
+        });
+
+        // Reset zoom when changing photos in modal
+        const origShowPhotoDetail = showPhotoDetail;
+        showPhotoDetail = function(index) {
+            resetModalZoom();
+            origShowPhotoDetail(index);
+        };
+
+        function showLoading(text) {
+            loadingText.textContent = text || 'Loading...';
+            loading.classList.add('active');
+        }
+
+        function hideLoading() {
+            loading.classList.remove('active');
+        }
+    </script>
+</body>
+</html>
