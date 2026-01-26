@@ -1004,7 +1004,6 @@
             <div class="style-list">
                 <button class="style-option selected" data-style="osm">Street Map</button>
                 <button class="style-option" data-style="satellite">Satellite</button>
-                <button class="style-option" data-style="cycle">Cycle Map</button>
                 <button class="style-option" data-style="humanitarian">Humanitarian</button>
             </div>
         </div>
@@ -1031,7 +1030,7 @@
             <div class="about-content">
                 <div class="section">
                     <h2>Photo Location Mapper</h2>
-                    <p class="version">Version 1.0.0 (Build 137)</p>
+                    <p class="version">Version 1.0.0 (Build 138)</p>
                     <p>Extract GPS coordinates from photos and visualize them on an interactive map.</p>
                     <p>Copyright © 2026 Gordon Williams</p>
                 </div>
@@ -1107,10 +1106,6 @@
             satellite: {
                 url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
                 attribution: '© Esri'
-            },
-            cycle: {
-                url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
-                attribution: '© CyclOSM'
             },
             humanitarian: {
                 url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
