@@ -191,7 +191,7 @@
         /* Floating map controls */
         .map-fab {
             position: absolute;
-            bottom: 100px;
+            bottom: 14px;
             right: 16px;
             width: 56px;
             height: 56px;
@@ -218,7 +218,7 @@
         }
 
         .map-style-fab {
-            bottom: 170px;
+            bottom: 84px;
         }
 
         /* Activity filter bar */
@@ -1030,7 +1030,7 @@
             <div class="about-content">
                 <div class="section">
                     <h2>Photo Location Mapper</h2>
-                    <p class="version">Version 1.0.0 (Build 138)</p>
+                    <p class="version">Version 1.0.0 (Build 142)</p>
                     <p>Extract GPS coordinates from photos and visualize them on an interactive map.</p>
                     <p>Copyright © 2026 Gordon Williams</p>
                 </div>
@@ -1175,10 +1175,7 @@
             // Fullscreen
             document.getElementById('fullscreenBtn').addEventListener('click', openFullscreen);
             document.getElementById('fullscreenClose').addEventListener('click', closeFullscreen);
-            document.getElementById('fullscreenOverlay').addEventListener('click', (e) => {
-                if (e.target === document.getElementById('fullscreenOverlay') ||
-                    e.target === document.getElementById('fullscreenImage')) closeFullscreen();
-            });
+            // Tap-to-close with double-tap detection (handled in fullscreenImage click handler)
             document.getElementById('fullscreenPrevBtn').addEventListener('click', fullscreenPrevPhoto);
             document.getElementById('fullscreenNextBtn').addEventListener('click', fullscreenNextPhoto);
 
@@ -1930,65 +1927,6 @@
             }
         }
 
-        // Swipe gesture support
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchEndX = 0;
-        let touchEndY = 0;
-
-        function handleSwipeGesture() {
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            const minSwipeDistance = 50;
-
-            // Only trigger if horizontal swipe is dominant
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-                if (deltaX < 0) {
-                    showNextPhoto(); // Swipe left = next
-                } else {
-                    showPrevPhoto(); // Swipe right = prev
-                }
-            }
-        }
-
-        // Attach swipe listeners to photo modal
-        document.getElementById('photoModal').addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        document.getElementById('photoModal').addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            touchEndY = e.changedTouches[0].screenY;
-            handleSwipeGesture();
-        }, { passive: true });
-
-        // Attach swipe listeners to fullscreen overlay
-        document.getElementById('fullscreenOverlay').addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        document.getElementById('fullscreenOverlay').addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            touchEndY = e.changedTouches[0].screenY;
-            handleFullscreenSwipe();
-        }, { passive: true });
-
-        function handleFullscreenSwipe() {
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            const minSwipeDistance = 50;
-
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-                if (deltaX < 0) {
-                    fullscreenNextPhoto();
-                } else {
-                    fullscreenPrevPhoto();
-                }
-            }
-        }
-
         function showFullscreenLoader() {
             const loader = document.getElementById('fullscreenLoader');
             const img = document.getElementById('fullscreenImage');
@@ -2133,11 +2071,17 @@
             }
         }, { passive: true });
 
-        // Double-tap to zoom/reset in fullscreen
+        // Double-tap to zoom/reset in fullscreen, single-tap to close
         let lastTapTime = 0;
+        let singleTapTimer = null;
         document.getElementById('fullscreenImage').addEventListener('click', (e) => {
             const now = Date.now();
             if (now - lastTapTime < 300) {
+                // Double-tap detected - cancel single-tap close and toggle zoom
+                if (singleTapTimer) {
+                    clearTimeout(singleTapTimer);
+                    singleTapTimer = null;
+                }
                 e.stopPropagation();
                 if (fullscreenZoom.scale > 1) {
                     resetFullscreenZoom();
@@ -2146,8 +2090,25 @@
                     fullscreenZoom.lastScale = 2.5;
                     updateFullscreenTransform();
                 }
+                lastTapTime = 0; // Reset to prevent triple-tap issues
+            } else {
+                // Potential single-tap - wait to see if it's a double-tap
+                // Only close if not zoomed in
+                if (fullscreenZoom.scale <= 1) {
+                    singleTapTimer = setTimeout(() => {
+                        closeFullscreen();
+                        singleTapTimer = null;
+                    }, 300);
+                }
+                lastTapTime = now;
             }
-            lastTapTime = now;
+        });
+
+        // Also handle taps on the overlay background
+        document.getElementById('fullscreenOverlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('fullscreenOverlay')) {
+                closeFullscreen();
+            }
         });
 
         // Reset zoom when changing photos
