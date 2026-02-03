@@ -1564,7 +1564,7 @@
         <header>
             <h1 style="margin: 0 0 2px 0; font-size: 1.3em;">Photo Location Mapper</h1>
             <div class="subtitle" style="font-size: 0.8em;">Extract GPS data from photos and visualize on a map</div>
-            <div style="font-size: 0.65em; opacity: 0.6; margin-top: 1px;">v1.1.0 build 74</div>
+            <div style="font-size: 0.65em; opacity: 0.6; margin-top: 1px;">v1.1.0 build 77</div>
         </header>
 
         <div class="upload-section">
@@ -5201,6 +5201,9 @@
                 `;
             } else {
                 img.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
                     width: 100%;
                     height: 100%;
                     object-fit: cover;
@@ -7139,6 +7142,16 @@
                     restorePhotoMarkers = await convertPhotoMarkersToDataUrls(mapContainer);
                     await sleep(200);
 
+                    // Temporarily remove clip-path styles that confuse dom-to-image (it tries to fetch #clip as URL)
+                    const elementsWithClipPath = [];
+                    mapContainer.querySelectorAll('*').forEach(el => {
+                        const clipPath = el.style.clipPath || window.getComputedStyle(el).clipPath;
+                        if (clipPath && clipPath.includes('url(')) {
+                            elementsWithClipPath.push({ el, original: el.style.clipPath });
+                            el.style.clipPath = 'none';
+                        }
+                    });
+
                     // Force Leaflet to redraw canvas layers at current view
                     map.invalidateSize({ animate: false });
                     await sleep(100);
@@ -7153,6 +7166,11 @@
                             }
                             return true;
                         }
+                    });
+
+                    // Restore clip-path styles
+                    elementsWithClipPath.forEach(({ el, original }) => {
+                        el.style.clipPath = original;
                     });
 
                     // Check if elevation panel is visible and include it
@@ -7437,8 +7455,16 @@
 
                     ctx.drawImage(img, circleX + tx, circleY + ty, img.naturalWidth * scale * pixelRatio, img.naturalHeight * scale * pixelRatio);
                 } else {
-                    // Default cover fit
-                    ctx.drawImage(img, circleX, circleY, circleSize, circleSize);
+                    // Default cover fit - scale image to cover circle while maintaining aspect ratio
+                    const imgWidth = img.naturalWidth;
+                    const imgHeight = img.naturalHeight;
+                    const scale = Math.max(circleSize / imgWidth, circleSize / imgHeight);
+                    const scaledWidth = imgWidth * scale;
+                    const scaledHeight = imgHeight * scale;
+                    // Center the scaled image within the circle
+                    const offsetX = (circleSize - scaledWidth) / 2;
+                    const offsetY = (circleSize - scaledHeight) / 2;
+                    ctx.drawImage(img, circleX + offsetX, circleY + offsetY, scaledWidth, scaledHeight);
                 }
 
                 ctx.restore();

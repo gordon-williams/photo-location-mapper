@@ -170,6 +170,10 @@
             background: #27ae60;
         }
 
+        .photo-thumb .gps-badge.inferred-gps {
+            background: #f39c12;
+        }
+
         .photo-thumb .gps-badge.no-gps {
             background: #e74c3c;
         }
@@ -1030,7 +1034,7 @@
             <div class="about-content">
                 <div class="section">
                     <h2>Photo Location Mapper</h2>
-                    <p class="version">Version 1.0.0 (Build 142)</p>
+                    <p class="version">Version 1.0.0 (Build 143)</p>
                     <p>Extract GPS coordinates from photos and visualize them on an interactive map.</p>
                     <p>Copyright © 2026 Gordon Williams</p>
                 </div>
@@ -1394,6 +1398,9 @@
             updateActivityFilter();
             updateRoutePolylines();
 
+            // Match photos without GPS to route timestamps
+            matchPhotosToRoutes();
+
             // Fit map to show routes
             if (map && routes.length > 0) {
                 const bounds = L.latLngBounds();
@@ -1631,6 +1638,110 @@
             return total;
         }
 
+        // Match photos without GPS to route timestamps
+        function matchPhotosToRoutes() {
+            if (routes.length === 0) return;
+
+            // Build a list of all route points with timestamps
+            const routePoints = [];
+            routes.forEach(route => {
+                route.path.forEach(point => {
+                    if (point.timestamp) {
+                        routePoints.push({
+                            lat: point.lat,
+                            lng: point.lng,
+                            timestamp: new Date(point.timestamp).getTime()
+                        });
+                    }
+                });
+            });
+
+            if (routePoints.length === 0) return;
+
+            // Sort by timestamp for efficient searching
+            routePoints.sort((a, b) => a.timestamp - b.timestamp);
+
+            let matchedCount = 0;
+
+            photos.forEach(photo => {
+                // Skip photos that already have GPS
+                if (photo.gps && !photo.gpsInferred) return;
+
+                // Need a date to match
+                if (!photo.date) return;
+
+                // Parse EXIF date format: "YYYY:MM:DD HH:MM:SS"
+                const photoTime = parseExifDate(photo.date);
+                if (!photoTime) return;
+
+                // Find nearest route point by timestamp
+                const nearest = findNearestPoint(routePoints, photoTime);
+
+                // Only match if within 5 minutes (300000ms)
+                if (nearest && Math.abs(nearest.timeDiff) < 300000) {
+                    photo.gps = { lat: nearest.point.lat, lng: nearest.point.lng };
+                    photo.gpsInferred = true;
+                    matchedCount++;
+                }
+            });
+
+            if (matchedCount > 0) {
+                console.log(`Matched ${matchedCount} photo(s) to route locations`);
+                updateUI();
+                updateMapMarkers();
+            }
+        }
+
+        function parseExifDate(dateStr) {
+            // EXIF format: "YYYY:MM:DD HH:MM:SS"
+            const match = dateStr.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+            if (match) {
+                return new Date(
+                    parseInt(match[1]),
+                    parseInt(match[2]) - 1,
+                    parseInt(match[3]),
+                    parseInt(match[4]),
+                    parseInt(match[5]),
+                    parseInt(match[6])
+                ).getTime();
+            }
+            return null;
+        }
+
+        function findNearestPoint(sortedPoints, targetTime) {
+            if (sortedPoints.length === 0) return null;
+
+            // Binary search for closest timestamp
+            let left = 0;
+            let right = sortedPoints.length - 1;
+
+            while (left < right) {
+                const mid = Math.floor((left + right) / 2);
+                if (sortedPoints[mid].timestamp < targetTime) {
+                    left = mid + 1;
+                } else {
+                    right = mid;
+                }
+            }
+
+            // Check both left and left-1 to find the closest
+            let bestIdx = left;
+            let bestDiff = Math.abs(sortedPoints[left].timestamp - targetTime);
+
+            if (left > 0) {
+                const prevDiff = Math.abs(sortedPoints[left - 1].timestamp - targetTime);
+                if (prevDiff < bestDiff) {
+                    bestIdx = left - 1;
+                    bestDiff = prevDiff;
+                }
+            }
+
+            return {
+                point: sortedPoints[bestIdx],
+                timeDiff: sortedPoints[bestIdx].timestamp - targetTime
+            };
+        }
+
         function updateActivityFilter() {
             const filterEl = document.getElementById('activityFilter');
 
@@ -1838,10 +1949,21 @@
             photos.forEach((photo, index) => {
                 const thumb = document.createElement('div');
                 thumb.className = 'photo-thumb';
+                let badgeClass = 'no-gps';
+                let badgeIcon = '✗';
+                if (photo.gps) {
+                    if (photo.gpsInferred) {
+                        badgeClass = 'inferred-gps';
+                        badgeIcon = '~';
+                    } else {
+                        badgeClass = 'has-gps';
+                        badgeIcon = '✓';
+                    }
+                }
                 thumb.innerHTML = `
                     <img src="${URL.createObjectURL(new Blob([photo.src]))}" alt="${photo.name}">
-                    <div class="gps-badge ${photo.gps ? 'has-gps' : 'no-gps'}">
-                        ${photo.gps ? '✓' : '✗'}
+                    <div class="gps-badge ${badgeClass}">
+                        ${badgeIcon}
                     </div>
                 `;
                 thumb.addEventListener('click', () => {
@@ -1891,7 +2013,11 @@
             addRow('Date', photo.date);
 
             if (photo.gps) {
-                addRow('Location', `${photo.gps.lat.toFixed(6)}, ${photo.gps.lng.toFixed(6)}`);
+                if (photo.gpsInferred) {
+                    infoHtml += `<div class="info-row"><span class="info-label">Location</span><span class="info-value" style="color:#f39c12">${photo.gps.lat.toFixed(6)}, ${photo.gps.lng.toFixed(6)} (from route)</span></div>`;
+                } else {
+                    addRow('Location', `${photo.gps.lat.toFixed(6)}, ${photo.gps.lng.toFixed(6)}`);
+                }
             } else {
                 infoHtml += `<div class="info-row"><span class="info-label">Location</span><span class="info-value" style="color:#e74c3c">No GPS data</span></div>`;
             }
